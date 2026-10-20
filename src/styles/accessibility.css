@@ -1,0 +1,35 @@
+/* Contrastes des petites légendes et des surfaces interactives. */
+body .button-primary{background:#b9513b}
+body .button-primary:hover{background:#a64733}
+body .hero-footnote,body .hero-art-label,body .scroll-cue,body .section-heading>p,body .section-heading>p>span,
+body .card-category,body .card-time,body .catalogue-note,body .experience-card>p,body .how-grid p,
+body .personal-copy>p,body .site-footer,body .site-footer small,body .how-heading>p{color:#686d60}
+body .step-number{color:#6d785b}
+body .paper-note>span:first-child{color:#786352}
+body .personal-sticker{color:#654a2a}
+body .personal-note{color:#5d694c}
+body .contact-section{background:#ad4f3c}
+body .contact-inner>p,body .contact-pending>span,body .contact-footnote{color:#fff3df}
+body .contact-star,body .contact-inner:after{color:#e6a384}
+body .experience-footer{position:relative;flex-wrap:wrap}
+body .experience-footer>span:not(:empty){position:static;flex-basis:100%;text-align:right;min-height:18px}
+body .experience-progress li{opacity:1}
+body .experience-progress li:not(.is-reached) .progress-dot{opacity:.45}
+/* Cibles tactiles des liens fins sans modifier leur ligne visuelle. */
+.card-try,.card-time+a,.personal-link,.site-footer nav a{min-height:44px;align-content:center}
+@media(min-width:701px) and (max-width:1150px){body .hero-svg{width:100%;margin-left:0}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-delay:0s!important}}
+@media(max-width:700px){
+  body .hero-copy>p,body .how-grid p,body .contact-inner>p,body .personal-copy>p{font-size:13px}
+  body .hero-actions .button,body .hero-secondary,body .card-try,
+  body .personal-link,body .contact-pending>.button,body .contact-inner>.button{font-size:12px}
+  body .hero-footnote,body .card-category,body .card-time,body .catalogue-note,
+  body .personal-tags>span,body .contact-pending>span,body .contact-footnote,
+  body .site-footer nav,body .site-footer small,body .section-heading>p>span{font-size:12px}
+  body .catalogue-note{line-height:1.6}
+  body .contact-inner>.section-kicker{font-size:10px;line-height:1.8}
+  body .hero-actions{gap:12px}
+  body .hero-art{margin-top:18px}
+  body .hero-footnote{line-height:1.5}
+  body .site-footer nav{gap:14px}
+}

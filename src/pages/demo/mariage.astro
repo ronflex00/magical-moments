@@ -1,0 +1,10 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProposalExperience from '../../experiences/proposal/ProposalExperience';
+import { proposalDemo } from '../../data/proposal-demo';
+import { siteConfig } from '../../site-config';
+---
+<BaseLayout title={`La grande question — ${siteConfig.name}`} description={proposalDemo.metadata.description} noindex={true} themeColor={proposalDemo.colors.background}>
+  <main id="contenu"><ProposalExperience client:load config={proposalDemo} /></main>
+  <noscript><p>Activez JavaScript pour découvrir cette histoire. <a href="/">Retour aux expériences</a>.</p></noscript>
+</BaseLayout>

@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroArt from '../components/marketing/HeroArt.astro';
+import MomentArt from '../components/marketing/MomentArt.astro';
+import { siteConfig } from '../site-config';
+import '../styles/marketing.css';
+const creations = [
+  { kind:'birthday' as const, number:'01', category:'Pour souffler ses bougies', title:'La quête d’anniversaire', description:'Des ballons à éclater, un vœu à faire et un cadeau qui n’attend que vous.', route:'/demo/anniversaire', tag:'Adorable & ludique', time:'3 min de bonheur' },
+  { kind:'proposal' as const, number:'02', category:'Pour le grand oui', title:'La grande question', description:'Quelques souvenirs, une lettre secrète… et une question qui change tout.', route:'/demo/mariage', tag:'Romantique & poétique', time:'Un moment suspendu' },
+  { kind:'party' as const, number:'03', category:'Pour réunir sa tribu', title:'La soirée secrète', description:'Une mission, trois indices et une invitation bien trop chouette pour la manquer.', route:'/demo/evenement', tag:'Funky & mystérieux', time:'À vous de jouer' },
+];
+const socials = Object.entries(siteConfig.social).filter(([,url])=>url);
+---
+<BaseLayout>
+  <header class="site-header container">
+    <a href="/" class="brand" aria-label={`${siteConfig.name}, accueil`}><svg viewBox="0 0 42 42" width="35" height="35" fill="none" aria-hidden="true"><g fill="#dc674e" transform="translate(21 21)"><ellipse rx="5.2" ry="18"/><ellipse rx="5.2" ry="18" transform="rotate(60)"/><ellipse rx="5.2" ry="18" transform="rotate(120)"/></g><circle cx="21" cy="21" r="5" fill="#f4d58d"/></svg><span>{siteConfig.name.split(' ').slice(0,-1).join(' ')}<br /><span>{siteConfig.name.split(' ').at(-1)}</span></span></a>
+    <nav class="desktop-nav" aria-label="Navigation principale"><a href="#experiences">Les expériences</a><a href="#comment">Comment ça marche</a><a href="#personnalisation">À votre image</a></nav>
+    <a href="#contact" class="nav-cta">Créons votre surprise <span aria-hidden="true">↗</span></a>
+    <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Ouvrir le menu"><span></span><span></span></button>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Navigation mobile" hidden><a href="#experiences">Les expériences</a><a href="#comment">Comment ça marche</a><a href="#personnalisation">À votre image</a><a href="#contact">Créons votre surprise ↗</a></nav>
+  </header>
+  <main id="contenu">
+    <section class="hero container" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="hero-eyebrow"><span class="small-spark" aria-hidden="true">✳</span> Des liens qui créent des liens</div>
+        <h1 id="hero-title">Petits clics.<br />Grandes<br /><em>émotions.</em><svg class="title-underline" viewBox="0 0 355 24" fill="none" aria-hidden="true"><path d="M3 14Q167-3 350 10M52 22Q221 7 333 19" stroke="#e2ac89" stroke-width="2.5" stroke-linecap="round"/></svg></h1>
+        <p>Un anniversaire, un grand oui, une soirée.<br class="desktop-break" /> Offrez une surprise qui se clique, se joue<br class="desktop-break" /> et se garde dans le cœur.</p>
+        <div class="hero-actions"><a href="#experiences" class="button button-primary">Découvrir les expériences <span aria-hidden="true">↗</span></a><a href="#contact" class="hero-secondary">Créer ma surprise <span aria-hidden="true">↗</span></a></div>
+        <div class="hero-footnote"><span class="tiny-heart" aria-hidden="true">♡</span> Un peu de vous. Beaucoup de magie.</div>
+      </div>
+      <HeroArt />
+      <a class="scroll-cue" href="#experiences"><span aria-hidden="true">↓</span> Faites place à l’inattendu</a>
+    </section>
+    <div class="occasion-strip" aria-label="Des expériences pour toutes vos occasions"><div><span>De vrais moments</span><span aria-hidden="true">✳</span><span>De petites aventures</span><span aria-hidden="true">✳</span><span>Vos grandes occasions</span><span aria-hidden="true">✳</span><span>Beaucoup d’émotions</span><span aria-hidden="true">✳</span></div></div>
+    <section id="experiences" class="catalogue container section-space" aria-labelledby="experiences-title">
+      <div class="section-heading"><div><div class="section-kicker">Le bonheur, en version interactive</div><h2 id="experiences-title">À chaque occasion,<br /><em>sa petite magie.</em></h2></div><p>Trois univers à explorer.<br />Une seule règle : faire plaisir.<br /><span>Essayez, c’est fait pour ça.</span></p></div>
+      <div class="experience-grid">{creations.map(item => <article class={`experience-card card-${item.kind}`}><a href={item.route} class="card-preview" aria-label={`${item.tag} : essayer ${item.title}`}><span class="preview-tag">{item.tag}</span><MomentArt kind={item.kind}/><span class="preview-play" aria-hidden="true">↗</span></a><div class="card-category"><span>{item.category}</span><span>{item.number}</span></div><h3><a href={item.route}>{item.title}</a></h3><p>{item.description}</p><a class="card-try" href={item.route}>Essayer cette expérience <span aria-hidden="true">↗</span></a><span class="card-time">{item.time}</span></article>)}</div>
+      <div class="catalogue-note"><span aria-hidden="true">✧</span> De vraies démos à jouer. Des prénoms et des histoires imaginaires.</div>
+    </section>
+    <section id="comment" class="how-section section-space" aria-labelledby="how-title"><div class="container"><div class="how-heading"><div><div class="section-kicker">De l’idée au sourire</div><h2 id="how-title">Simple comme<br /><em>une belle attention.</em></h2></div><p>Vous pensez à quelqu’un.<br />On s’occupe de l’émerveillement.</p><svg class="how-doodle" viewBox="0 0 130 65" fill="none" aria-hidden="true"><path d="M3 50c43-57 77-46 57-17s42 13 65-17m-19 1 20-4-2 22" stroke="#8b926e" stroke-width="2" stroke-linecap="round"/></svg></div><ol class="how-grid"><li><span class="step-number">01<span aria-hidden="true">✧</span></span><h3>Trouvez votre univers.</h3><p>Testez les expériences et choisissez celle qui lui ressemble.</p></li><li><span class="step-number">02<span aria-hidden="true">♡</span></span><h3>Racontez-nous.</h3><p>Vos mots, vos photos, votre idée un peu folle. Tout commence là.</p></li><li><span class="step-number">03<span aria-hidden="true">↗</span></span><h3>Recevez votre lien.</h3><p>Votre surprise prend vie. Vous la découvrez avant de l’offrir.</p></li><li><span class="step-number">04<span aria-hidden="true">✳</span></span><h3>Faites battre un cœur.</h3><p>Un message, un QR code, un petit mot… À vous de jouer.</p></li></ol></div></section>
+    <section id="personnalisation" class="personal-section container section-space" aria-labelledby="personal-title"><div class="personal-art" aria-hidden="true"><span class="personal-note">La recette ?<br /><em>Votre histoire.</em></span><div class="paper-note"><span>POUR QUELQU’UN D’UNIQUE</span><svg viewBox="0 0 100 90" width="94" height="85"><path d="M50 80 14 46C-7 22 26-1 50 25 74-1 107 22 86 46Z" fill="#cf6c60"/></svg><span>de la part de vous.</span></div><div class="color-chips"><span></span><span></span><span></span><span></span></div><span class="personal-sticker">Juste<br />pour toi ♡</span></div><div class="personal-copy"><div class="section-kicker">Personne n’a la même histoire</div><h2 id="personal-title">La touche magique ?<br /><em>C’est vous.</em></h2><p>Un prénom qui fait sourire. Votre chanson. Cette photo un peu floue que vous adorez. On glisse votre histoire dans chaque détail.</p><div class="personal-tags">{['Vos prénoms','Vos photos','Vos mots doux','Vos couleurs','Votre musique','Des mini-jeux','Des animations'].map(tag=><span>{tag}</span>)}</div><a href="#contact" class="personal-link">Une idée hors du cadre ? Parlons-en <span aria-hidden="true">↗</span></a></div></section>
+    <section id="contact" class="contact-section" aria-labelledby="contact-title"><div class="container contact-inner"><span class="contact-star" aria-hidden="true">✳</span><div class="section-kicker">Les plus beaux cadeaux ne s’emballent pas tous</div><h2 id="contact-title">Et si on créait<br /><em>son prochain sourire ?</em></h2><p>Une occasion en tête ? Une personne en particulier ?<br />Votre prochaine belle attention commence ici.</p>{siteConfig.email ? <a class="button button-light" href={`mailto:${siteConfig.email}?subject=${encodeURIComponent('Créons ma surprise')}`}>Créer ma surprise <span aria-hidden="true">↗</span></a> : socials.length ? <a class="button button-light" href={socials[0][1]} target="_blank" rel="noopener noreferrer">Créer ma surprise <span aria-hidden="true">↗</span></a> : <div class="contact-pending"><span>Les demandes de création ouvriront bientôt.</span><a class="button button-light" href="#experiences">En attendant, place à la magie <span aria-hidden="true">↗</span></a></div>}{socials.length > 0 && <div class="social-links">{socials.map(([name,url])=><a href={url} target="_blank" rel="noopener noreferrer">{name === 'instagram' ? 'Instagram' : name === 'tiktok' ? 'TikTok' : 'WhatsApp'} ↗</a>)}</div>}<div class="contact-footnote">Créé avec attention. Personnalisé avec le cœur.</div></div></section>
+  </main>
+  <footer class="site-footer container"><a href="/" class="footer-brand">✳ {siteConfig.name}</a><span>Des souvenirs qui commencent par un clic.</span><nav aria-label="Navigation de pied de page"><a href="#experiences">Les expériences</a><a href="#contact">Contact</a></nav><small>© {new Date().getFullYear()} {siteConfig.name}</small></footer>
+  <script>
+    const toggle = document.querySelector<HTMLButtonElement>('.mobile-menu-toggle');
+    const nav = document.querySelector<HTMLElement>('#mobile-nav');
+    const closeMenu = () => { if(toggle && nav){ toggle.setAttribute('aria-expanded','false'); nav.hidden = true; } };
+    toggle?.addEventListener('click',()=>{ if(nav){const open=toggle.getAttribute('aria-expanded')!=='true';toggle.setAttribute('aria-expanded',String(open));nav.hidden=!open;} });
+    nav?.querySelectorAll('a').forEach(link=>link.addEventListener('click',closeMenu));
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenu();toggle?.focus();}});
+    const surprise = document.querySelector<HTMLButtonElement>('.surprise-art');
+    surprise?.addEventListener('click',()=>{const open=surprise.getAttribute('aria-expanded')!=='true';surprise.setAttribute('aria-expanded',String(open));surprise.closest('.hero-art')?.classList.toggle('is-open',open);const message=document.getElementById('hero-surprise');if(message)message.hidden=!open;});
+  </script>
+</BaseLayout>

@@ -1,0 +1,19 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BirthdayExperience from '../../experiences/birthday/BirthdayExperience';
+import ProposalExperience from '../../experiences/proposal/ProposalExperience';
+import PartyExperience from '../../experiences/party/PartyExperience';
+import { creations } from '../../data/creations';
+import type { CreationConfig } from '../../data/types';
+export const getStaticPaths = (() => creations.map(config => ({ params: { slug: config.slug }, props: { config } }))) satisfies GetStaticPaths;
+const { config } = Astro.props as { config: CreationConfig };
+---
+<BaseLayout title={config.metadata.title} description={config.metadata.description} noindex={config.metadata.noindex} themeColor={config.colors.background}>
+  <main id="contenu">
+    {config.type === 'birthday' && <BirthdayExperience client:load config={config} />}
+    {config.type === 'proposal' && <ProposalExperience client:load config={config} />}
+    {config.type === 'party' && <PartyExperience client:load config={config} />}
+  </main>
+  <noscript><p>Activez JavaScript pour vivre cette expérience. <a href="/">Retour à l’accueil</a>.</p></noscript>
+</BaseLayout>
