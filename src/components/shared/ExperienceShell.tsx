@@ -4,6 +4,9 @@ import { siteConfig } from '../../site-config';
 import { withBase } from '../../lib/paths';
 import { applyMotionQuality, motionSettings, observeMotionScope } from '../../lib/animation/settings';
 import './experience-shell.css';
+import './immersive-v3.css';
+import { AudioMixer, type MixerState } from './AudioMixer';
+import { AmbientWorld } from '../effects/AmbientWorld';
 
 interface ShellProps {
   theme: 'birthday' | 'proposal' | 'party';
@@ -14,9 +17,10 @@ interface ShellProps {
   sound: boolean;
   onToggleSound: () => void;
   onBack?: () => void;
+  audioControl?: MixerState;
   children: ReactNode;
 }
-export function ExperienceShell({ theme, label, step, steps, onReplay, sound, onToggleSound, onBack, children }: ShellProps) {
+export function ExperienceShell({ theme, label, step, steps, onReplay, sound, onToggleSound, onBack, audioControl, children }: ShellProps) {
   const [shareStatus, setShareStatus] = useState('');
   const [paused, setPaused] = useState(false);
   const scope = useRef<HTMLDivElement>(null);
@@ -28,7 +32,8 @@ export function ExperienceShell({ theme, label, step, steps, onReplay, sound, on
     } catch (error) { if ((error as Error).name !== 'AbortError') setShareStatus('Copiez le lien dans votre barre d’adresse.'); }
   }
   return <MotionConfig reducedMotion="user">
-    <div ref={scope} className={`experience-shell theme-${theme} ${paused ? 'is-motion-paused' : ''}`}>
+    <div ref={scope} data-audio-status={audioControl?.status} className={`experience-shell theme-${theme} ${paused ? 'is-motion-paused' : ''}`}>
+      <AmbientWorld theme={theme}/>
       <header className="experience-topbar">
         <a href={withBase('/')} className="experience-home" aria-label={`Retour à ${siteConfig.name}`}><span aria-hidden="true">✳</span> {siteConfig.name}</a>
         <div className="experience-tools">
@@ -36,8 +41,11 @@ export function ExperienceShell({ theme, label, step, steps, onReplay, sound, on
           <button type="button" className="ambient-toggle" aria-label={paused ? 'Reprendre les animations' : 'Mettre les animations en pause'} aria-pressed={paused} onClick={() => setPaused(value => !value)}><span aria-hidden="true">{paused ? '▷' : 'Ⅱ'}</span><span>Animations</span></button>
           <button type="button" aria-pressed={sound} onClick={onToggleSound} aria-label={sound ? 'Désactiver le son' : 'Activer le son'}><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/>{sound ? <><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></> : <path d="m16 9 6 6m0-6-6 6"/>}</svg><span>Son {sound ? 'activé' : 'coupé'}</span></button>
           <button type="button" onClick={onReplay} aria-label="Recommencer l’expérience"><span aria-hidden="true">↺</span><span>Recommencer</span></button>
+          {audioControl && <AudioMixer audio={audioControl}/>}
         </div>
       </header>
+      {audioControl?.status === 'blocked' && <p className="audio-retry" role="status">Le son attend votre accord. <button type="button" onClick={audioControl.retry||onToggleSound}>Réessayer le son ♫</button></p>}
+      {audioControl?.status === 'effects-only' && <p className="audio-retry" role="status"><span>Musique indisponible · effets actifs.</span> <button type="button" onClick={audioControl.retry||onToggleSound}>Réessayer la musique ♫</button></p>}
       <div className="experience-progress" aria-label={`Étape ${step + 1} sur ${steps.length} : ${steps[step]}`}>
         <span className="experience-label">{label}</span>
         <ol>{steps.map((name, index) => <li key={name} className={index <= step ? 'is-reached' : ''} aria-current={index === step ? 'step' : undefined}><span className="progress-dot"/><span className="progress-name">{name}</span></li>)}</ol>
@@ -48,10 +56,10 @@ export function ExperienceShell({ theme, label, step, steps, onReplay, sound, on
     </div>
   </MotionConfig>;
 }
-export function SceneTransition({ sceneKey, children }: { sceneKey: string | number; children: ReactNode }) {
-  return <AnimatePresence mode="wait" initial={false}><SceneFrame key={sceneKey}>{children}</SceneFrame></AnimatePresence>;
+export function SceneTransition({ sceneKey, children, theme='birthday' }: { sceneKey: string | number; children: ReactNode; theme?:'birthday'|'proposal'|'party' }) {
+  return <AnimatePresence mode="wait" initial={false}><SceneFrame key={sceneKey} theme={theme}>{children}</SceneFrame></AnimatePresence>;
 }
-function SceneFrame({ children }: { children: ReactNode }) {
+function SceneFrame({ children,theme }: { children: ReactNode;theme:'birthday'|'proposal'|'party' }) {
   const reduce = useReducedMotion();
   const present = useIsPresent();
   const scope = useRef<HTMLDivElement | null>(null);
@@ -64,7 +72,8 @@ function SceneFrame({ children }: { children: ReactNode }) {
     const title = node.querySelector<HTMLHeadingElement>('h1');
     if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
   }, []);
-  return <motion.div ref={focusScene} className="scene-transition" inert={!present} aria-hidden={!present || undefined} initial={{ opacity: 0, y: reduce ? 0 : 20, rotateX: reduce ? 0 : 2 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} exit={{ opacity: 0, y: reduce ? 0 : -12 }} transition={{ duration: reduce ? 0 : motionSettings.scene, ease: motionSettings.ease }}>{children}</motion.div>;
+  const entry=reduce?{opacity:1}:{birthday:{opacity:.1,y:20,scale:.96,rotate:-.6},proposal:{opacity:.1,x:-22,rotateY:-7,scale:.99},party:{opacity:.2,x:32,skewX:-3,scale:.97}}[theme];
+  return <motion.div ref={focusScene} className={`scene-transition transition-${theme}`} inert={!present} aria-hidden={!present || undefined} initial={entry} animate={{ opacity:1,x:0,y:0,scale:1,rotate:0,rotateY:0,skewX:0 }} exit={{ opacity:0,y:reduce?0:-12,transition:{duration:reduce?0:.14} }} transition={{ duration:reduce?0:theme==='proposal'?.6:motionSettings.scene+.1,ease:motionSettings.ease }}>{children}</motion.div>;
 }
 export function ConfettiEffect({ active }: { active: boolean }) {
   const reduce = useReducedMotion();

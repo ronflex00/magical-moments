@@ -22,5 +22,6 @@ export const proposalDemo: ProposalConfig = {
     { title: 'Notre petit quotidien', message: 'Les dimanches sans programme, les pâtes improvisées, nos chansons dans la cuisine. Avec toi, les petits riens deviennent tout.' },
   ],
   photos: [],
+  audio: { src: '/audio/our-constellation.mp3', volume: 0.55 },
   colors: { background: '#101c2b', accent: '#e9ce9c', secondary: '#d9b7ac' },
 };

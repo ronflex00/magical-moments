@@ -1,0 +1,29 @@
+[
+  {
+    "file": "birthday-garden.mp3",
+    "bpm": 92,
+    "bars": 16,
+    "duration": 41.739,
+    "bytes": 502028,
+    "peak": 0.78,
+    "seam_delta": 0.0
+  },
+  {
+    "file": "our-constellation.mp3",
+    "bpm": 72,
+    "bars": 16,
+    "duration": 53.333,
+    "bytes": 641132,
+    "peak": 0.78,
+    "seam_delta": 0.0
+  },
+  {
+    "file": "midnight-disco.mp3",
+    "bpm": 112,
+    "bars": 16,
+    "duration": 34.286,
+    "bytes": 412604,
+    "peak": 0.78,
+    "seam_delta": 0.0
+  }
+]

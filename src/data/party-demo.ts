@@ -19,5 +19,6 @@ export const partyDemo: PartyConfig = {
   message: 'Le meilleur programme ? Vous, nous, quelques vinyles et aucune envie de rentrer tôt. La piste vous attend.',
   rsvp: {},
   puzzleCode: '274',
+  audio: { src: '/audio/midnight-disco.mp3', volume: 0.55 },
   colors: { background: '#251347', accent: '#ff7947', secondary: '#f9df69' },
 };

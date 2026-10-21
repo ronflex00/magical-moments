@@ -61,7 +61,7 @@ async function playBirthday(page: Page, audit = false) {
   await expect(toStars).toBeDisabled();
   await activate(page.getByRole('button',{name:/Toucher le ballon dansant/}).first());
   await expect(toStars).toBeDisabled();
-  await expect(page.getByText('Celui-ci préfère danser !',{exact:false})).toBeVisible();
+  await expect(page.getByText('Oups ! Essaie une étoile',{exact:false})).toBeVisible();
   if (audit) await auditCurrentScene(page);
   const goal = getBalloonGoal(birthdayDemo.interactions.balloonsToPop);
   for (let index = 0; index < goal; index += 1) {
@@ -103,7 +103,7 @@ async function playBirthday(page: Page, audit = false) {
   if (audit) await auditCurrentScene(page);
   await noHorizontalOverflow(page);
   await activate(blow);
-  await expect(page.getByText('Toutes les bougies sont soufflées. Ton vœu est bien gardé.')).toBeVisible();
+  await expect(page.getByText('Ton vœu est bien gardé. ✧')).toBeVisible();
   if (audit) await auditCurrentScene(page);
   await activate(page.getByRole('button', { name: 'Et maintenant, ton cadeau' }));
 

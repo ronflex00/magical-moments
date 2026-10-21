@@ -17,6 +17,7 @@ export const birthdayDemo: BirthdayConfig = {
     title: 'Une journée rien que pour toi',
     description: 'Un petit-déjeuner au lit, une escapade surprise et ton gâteau préféré. Aujourd’hui, on s’occupe de tout. Toi, profite.',
   },
+  audio: { src: '/audio/birthday-garden.mp3', volume: 0.55 },
   colors: { background: '#fff8ed', accent: '#f4778b', secondary: '#bca7df' },
   photos: [],
   candleCount: 5,

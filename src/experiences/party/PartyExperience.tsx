@@ -1,3 +1,5 @@
+import { GestureSurface } from '../../components/gestures/GestureSurface';
+import { GestureHint } from '../../components/gestures/GestureHint';
 import { useMemo, useState, type CSSProperties } from 'react';
 import type { PartyConfig } from '../../data/types';
 import { ExperienceShell, SceneTransition, ConfettiEffect } from '../../components/shared/ExperienceShell';
@@ -79,7 +81,7 @@ function RoomScenery() {
 
 function ObjectArt({ id }: { id: RoomObjectId }) {
   if (id === 'disco') return <DiscoBall />;
-  if (id === 'record') return <svg viewBox="0 0 130 100" aria-hidden="true"><path d="M5 18h119v73H5z" fill="#F9DF69" stroke="#251347" strokeWidth="4" /><ellipse cx="55" cy="52" rx="39" ry="30" fill="#251347" /><ellipse cx="55" cy="52" rx="29" ry="22" fill="none" stroke="#76528E" strokeWidth="2" /><ellipse cx="55" cy="52" rx="17" ry="13" fill="#FF7947" /><circle cx="55" cy="52" r="3" fill="#F9DF69" /><path d="M111 31v27l-23 15" stroke="#251347" strokeWidth="5" fill="none" strokeLinecap="round" /><circle cx="111" cy="31" r="6" fill="#FF7947" /></svg>;
+  if (id === 'record') return <svg viewBox="0 0 130 100" aria-hidden="true"><path d="M5 18h119v73H5z" fill="#F9DF69" stroke="#251347" strokeWidth="4" /><ellipse cx="55" cy="52" rx="39" ry="30" fill="#251347" /><ellipse cx="55" cy="52" rx="29" ry="22" fill="none" stroke="#76528E" strokeWidth="2" /><ellipse cx="55" cy="52" rx="17" ry="13" fill="#FF7947" /><circle cx="55" cy="52" r="3" fill="#F9DF69" /><path className="vinyl-disc" d="M34 35q18-14 37 4" stroke="#fff2c3" strokeOpacity=".4" fill="none" strokeWidth="2"/><path d="M111 31v27l-23 15" stroke="#251347" strokeWidth="5" fill="none" strokeLinecap="round" /><circle cx="111" cy="31" r="6" fill="#FF7947" /></svg>;
   if (id === 'photo') return <svg viewBox="0 0 95 105" aria-hidden="true"><g transform="rotate(12 48 55)"><path d="M14 6h71v88H14z" fill="#FFF2C3" stroke="#251347" strokeWidth="4" /><path d="M23 15h53v49H23z" fill="#A98AC4" /><path d="m23 60 17-26 13 17 9-9 14 18" fill="#F9DF69" /><circle cx="63" cy="28" r="7" fill="#FF7947" /><path d="M29 79h38" stroke="#FF7947" strokeWidth="5" /></g></svg>;
   if (id === 'plant') return <svg viewBox="0 0 100 175" aria-hidden="true"><path d="M50 120V36m0 51L21 65m29 39 29-30" stroke="#B1C584" strokeWidth="5" fill="none" /><path d="M51 59C13 52 15 16 18 12c33 5 42 23 33 47ZM50 81c-5-41 20-58 35-58 10 30-11 51-35 58ZM40 97C10 97 4 75 10 60c24-1 39 16 30 37ZM53 114c-3-28 19-44 41-41-1 28-16 41-41 41Z" fill="#B1C584" stroke="#251347" strokeWidth="3" /><path d="m22 120 9 46h39l10-46Z" fill="#FF7947" stroke="#251347" strokeWidth="4" /><path d="M21 120h60" stroke="#F9DF69" strokeWidth="7" /></svg>;
   if (id === 'drink') return <svg viewBox="0 0 65 100" aria-hidden="true"><path d="m9 17 24 36 24-36Zm24 36v32m-16 2h32" fill="#F19F75" stroke="#251347" strokeWidth="4" strokeLinejoin="round" /><path d="M18 29h30" stroke="#FF7947" strokeWidth="10" /><path d="m40 30 9-25" stroke="#F9DF69" strokeWidth="4" /><circle cx="17" cy="15" r="11" fill="#F9DF69" stroke="#251347" strokeWidth="3" /></svg>;
@@ -93,10 +95,10 @@ function PartyRoom({ found, hinted, inspect }: { found: ClueId[]; hinted: ClueId
     <span className="party-room-label" aria-hidden="true">LE SALON DES SECRETS</span>
     {objects.map((id) => {
       const discovered = isClue(id) && found.includes(id);
-      return <button key={id} type="button" className={`party-room-object party-object-${id}${discovered ? ' is-found' : ''}${hinted === id ? ' is-hinted' : ''}`} onClick={() => inspect(id)} aria-label={`${objectLabels[id]}${discovered ? ' — indice trouvé' : ''}`} aria-pressed={discovered}>
-        <ObjectArt id={id} />
+      return <GestureSurface key={id} axis="both" threshold={45} onCommit={()=>inspect(id)} className={`party-room-object party-object-${id}${discovered ? ' is-found' : ''}${hinted === id ? ' is-hinted' : ''}`}><button type="button" className="party-room-control gesture-object" onClick={() => inspect(id)} aria-label={`${objectLabels[id]}${discovered ? ' — indice trouvé' : ''}`} aria-pressed={discovered}>
+        <div className="room-moving-art" data-ambient><ObjectArt id={id} /></div>
         {discovered && <span className="party-object-check" aria-hidden="true">✓</span>}
-      </button>;
+      </button></GestureSurface>;
     })}
   </div>;
 }
@@ -111,31 +113,32 @@ function InvitationDetails({ config }: { config: PartyConfig }) {
 
 export default function PartyExperience({ config }: { config: PartyConfig }) {
   const [scene, setScene] = useState(0);
+  const [ticketBack,setTicketBack]=useState(false);
   const [found, setFound] = useState<ClueId[]>([]);
-  const [feedback, setFeedback] = useState('La pièce cache trois indices. À vous de jouer.');
+  const [feedback, setFeedback] = useState('Trois indices. À vous de jouer.');
   const [hinted, setHinted] = useState<ClueId | null>(null);
   const [slots, setSlots] = useState<ClueSlots>([null, null, null]);
   const [enteredCode, setEnteredCode] = useState('');
   const [codeUnlocked, setCodeUnlocked] = useState(false);
   const code = getPartyCode(config);
-  const sound = useSound(config.audio);
+  const sound = useSound(config.audio, 'party', scene);
   const rsvpLinks = useMemo(() => getRsvpLinks(config), [config]);
   const unlocked = canUnlockParty(found);
   const dateLabel = formatPartyDate(config.date);
   const style = { '--party-bg': config.colors.background, '--party-orange': config.colors.accent, '--party-yellow': config.colors.secondary } as CSSProperties;
 
   function replay() {
-    setScene(0);
+    setScene(0);setTicketBack(false);
     setSlots([null, null, null]); setEnteredCode(''); setCodeUnlocked(false);
     setFound([]);
     setHinted(null);
-    setFeedback('La pièce cache trois indices. À vous de jouer.');
+    setFeedback('Trois indices. À vous de jouer.');
   }
 
   function advance() {
     if ((scene === 1 && !unlocked) || (scene === 2 && !cluesAssembled(slots)) || (scene === 3 && !codeUnlocked)) return;
     tactileFeedback();
-    sound.play(scene === 1 || scene === 2 ? 'celebrate' : 'pop');
+    if(scene===0)sound.start();sound.play(scene===0?'vinyl_start':scene>=3?'disco_reveal':'paper_slide');
     setScene(Math.min(5, scene + 1));
   }
 
@@ -143,25 +146,25 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
     tactileFeedback();
     if (isClue(id)) {
       if (found.includes(id)) {
-        setFeedback('Cet indice est déjà dans votre poche. Inspectez un autre objet !');
+        setFeedback('Cet indice est déjà dans votre poche.');
         return;
       }
       const nextFound = discoverClue(found, id);
       setFound(nextFound);
       setHinted(null);
-      sound.play(canUnlockParty(nextFound) ? 'celebrate' : 'chime');
+      sound.play(id==='record'?'vinyl_start':'clue_pickup');
       const messages: Record<ClueId, string> = {
         disco: `Ça brille ! La boule disco cache une date : ${dateLabel}.`,
         record: `Un vinyle, un rendez-vous : la musique démarre à ${config.time.replace(':', ' h ')}.`,
         photo: 'Bien vu ! Au dos de la photo, vous trouvez le lieu de la soirée.',
       };
-      setFeedback(canUnlockParty(nextFound) ? 'Les trois indices sont réunis. Il reste à reconstituer le ticket secret !' : messages[id]);
+      setFeedback(canUnlockParty(nextFound) ? 'Trois indices. Recomposez le ticket !' : messages[id]);
     } else {
-      sound.play('pop');
+      sound.play(id==='speaker'?'keypad_press':'object_drag');
       const messages = {
-        plant: 'Cette plante a le sens de la fête… mais elle garde le silence. Encore un petit tour !',
-        drink: 'Une rondelle de citron et beaucoup de mystère. Aucun indice dans ce verre !',
-        speaker: 'Ça promet de bonnes basses ! L’indice se cache dans un autre objet.',
+        plant: 'La plante garde le silence. 🌿',
+        drink: 'Un citron. Aucun indice. ✦',
+        speaker: 'De bonnes basses… cherchez encore. ♫',
       };
       setFeedback(messages[id]);
     }
@@ -173,24 +176,24 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
   }
 
   return <div className="party-experience" style={style}>
-    <ExperienceShell theme="party" label="LA SOIRÉE SECRÈTE" step={scene} steps={steps} onReplay={replay} onBack={() => setScene(value => Math.max(0, value - 1))} sound={sound.enabled} onToggleSound={sound.toggle}>
+    <ExperienceShell theme="party" label="LA SOIRÉE SECRÈTE" step={scene} steps={steps} onReplay={replay} onBack={() => setScene(value => Math.max(0, value - 1))} audioControl={sound} sound={sound.enabled} onToggleSound={sound.toggle}>
       <ConfettiEffect active={scene === 5} />
-      <SceneTransition sceneKey={scene}>
+      <SceneTransition theme="party" sceneKey={scene}>
         {scene === 0 && <section className="party-intro party-scene" aria-labelledby="party-intro-title">
           <div className="party-intro-copy">
             <span className="party-eyebrow"><span className="party-dot" /> UN MESSAGE CONFIDENTIEL</span>
             <h1 id="party-intro-title">Il se prépare<br />quelque chose<br /><em>de grand.</em><Star /></h1>
-            <p>Une invitation vous attend. Mais d’abord, il va falloir jouer les détectives.</p>
+            <p>Une invitation. Trois secrets.</p>
             <button className="party-button" type="button" onClick={advance}>Accepter la mission <Arrow /></button>
-            <span className="party-small-note">3 indices · 1 code · à votre rythme</span>
+            <span className="party-small-note">♫ Musique au départ · à votre rythme</span>
           </div>
           <SecretTicket organizer={config.organizer} />
-          <div className="party-scene-footer"><span>VOTRE CURIOSITÉ EST VOTRE MEILLEUR ATOUT.</span><span>INSÉRER UN PEU DE FOLIE ↗</span></div>
+          <div className="party-scene-footer" aria-hidden="true"><Star/><span>À VOUS DE JOUER ✦</span></div>
         </section>}
 
         {scene === 1 && <section className="party-investigation party-scene" aria-labelledby="party-game-title">
           <div className="party-game-heading"><div><span className="party-eyebrow">LA MISSION EST LANCÉE</span><h1 id="party-game-title">Fouillez. Trouvez. <em>Dansez.</em></h1></div><span className="party-counter" aria-label={`${found.length} indices trouvés sur 3`}><strong>{found.length}</strong> / 3 <small>INDICES</small></span></div>
-          <p className="party-game-intro" id="party-room-instructions">Touchez les objets du salon. Certains cachent un secret, d’autres vous font marcher. <span>Au clavier : Tab puis Entrée.</span></p>
+          <p className="party-game-intro" id="party-room-instructions">Déplacez les objets. ✦ <span className="sr-only">Au clavier : Tab puis Entrée.</span></p>
           <div className="party-game-layout"><PartyRoom found={found} hinted={hinted} inspect={inspect} />
             <aside className="party-casefile" aria-label="Votre carnet d’enquête"><span className="party-casefile-label">CARNET D’ENQUÊTE</span>
               {(['disco', 'record', 'photo'] as ClueId[]).map((id, index) => <div key={id} className={`party-clue${found.includes(id) ? ' is-found' : ''}`}><span className="party-clue-number">{found.includes(id) ? '✓' : `0${index + 1}`}</span><div><small>{['UNE DATE', 'UNE HEURE', 'UN LIEU'][index]}</small><p>{found.includes(id) ? [dateLabel, config.time.replace(':', ' h '), config.address][index] : 'À découvrir…'}</p></div></div>)}
@@ -204,22 +207,22 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
         {scene === 2 && <section className="party-scene party-puzzle-scene" aria-labelledby="party-workbench-title">
           <span className="party-eyebrow">LE BUREAU DES BELLES SOIRÉES</span>
           <h1 id="party-workbench-title">Les bonnes pièces.<br/><em>Le bon ordre.</em></h1>
-          <p className="party-puzzle-description">Votre carnet cache un ticket déchiré. Remettez la date, l’heure et le lieu à leur place pour révéler les trois chiffres du code.</p>
-          <ClueWorkbench config={config} slots={slots} code={code} onPlace={nextSlots => { setSlots(nextSlots); sound.play('chime'); tactileFeedback(); }}/>
+          <p className="party-puzzle-description">Recomposez le ticket. ✦</p>
+          <ClueWorkbench onSound={sound.play} config={config} slots={slots} code={code} onPlace={nextSlots => { setSlots(nextSlots); tactileFeedback(); }}/>
           <button type="button" className="party-button party-puzzle-next" disabled={!cluesAssembled(slots)} onClick={advance}>Essayer le code secret <Arrow/></button>
         </section>}
 
         {scene === 3 && <section className="party-scene party-puzzle-scene" aria-labelledby="party-lock-title">
           <span className="party-eyebrow">PLUS QU’UN PETIT CLIC</span>
           <h1 id="party-lock-title">Entrez le code.<br/><em>Sortez les paillettes.</em></h1>
-          <p className="party-puzzle-description">Les chiffres de votre ticket ouvrent la porte. À vous de composer le début d’une belle soirée.</p>
-          <PartyLock code={code} value={enteredCode} onChange={setEnteredCode} unlocked={codeUnlocked} onUnlock={() => { setCodeUnlocked(true); sound.play('celebrate'); tactileFeedback(); }}/>
+          <p className="party-puzzle-description">Trois chiffres. Une porte.</p>
+          <PartyLock onSound={sound.play} code={code} value={enteredCode} onChange={setEnteredCode} unlocked={codeUnlocked} onUnlock={() => { setCodeUnlocked(true); sound.play('unlock'); tactileFeedback(); }}/>
           {codeUnlocked && <button type="button" className="party-button" onClick={advance}>Ouvrir l’invitation <Arrow/></button>}
         </section>}
 
-        {scene === 4 && <section className="party-reveal party-scene" aria-labelledby="party-invitation-title">
-          <div className="party-reveal-aside"><span className="party-eyebrow">MISSION ACCOMPLIE</span><h1>Vous avez<br />le sens<br /><em>de la fête.</em></h1><p>Les indices ont parlé.<br />Et vous êtes officiellement invité·e.</p><Star className="party-reveal-star" /></div>
-          <article className="party-invitation"><div className="party-invitation-top"><span>UNE INVITATION DE {config.organizer}</span><DiscoBall /></div><span className="party-invitation-overline">GARDEZ VOTRE SOIRÉE POUR</span><h2 id="party-invitation-title">{config.name}</h2><InvitationDetails config={config} /><div className="party-invitation-foot"><span>VOUS + NOUS = LE BON PROGRAMME</span><Star /></div></article>
+        {scene === 4 && <section className="party-reveal party-scene" aria-labelledby="party-reveal-title">
+          <div className="party-reveal-aside"><span className="party-eyebrow">MISSION ACCOMPLIE</span><h1 id="party-reveal-title">Vous avez<br />le sens<br /><em>de la fête.</em></h1><p>La piste est à vous.</p><Star className="party-reveal-star" /></div>
+<GestureSurface className={`party-ticket-gesture ${ticketBack?'is-back':''}`} axis="x" onCommit={()=>{setTicketBack(v=>!v);sound.play('paper_slide');}}>{ticketBack?<div className="party-invitation-back"><DiscoBall/><span>VOTRE SOIRÉE SECRÈTE</span><strong>{config.name}</strong><span>{dateLabel} · {config.time}</span></div>:<article className="party-invitation gesture-object"><div className="party-invitation-top"><span>UNE INVITATION DE {config.organizer}</span><DiscoBall /></div><span className="party-invitation-overline">GARDEZ VOTRE SOIRÉE POUR</span><h2 id="party-invitation-title">{config.name}</h2><InvitationDetails config={config} /><div className="party-invitation-foot"><span>VOUS + NOUS = LE BON PROGRAMME</span><Star /></div></article>}<button className="party-flip-control" onClick={()=>{setTicketBack(v=>!v);sound.play('paper_slide');}}>{ticketBack?'Voir les informations':'Retourner l’invitation'} ↔</button><GestureHint label="Faites glisser votre invitation"/></GestureSurface>
           <div className="party-reveal-action"><button className="party-button" type="button" onClick={advance}>Passer en mode fête <Arrow /></button></div>
         </section>}
 
@@ -230,7 +233,7 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
           <div className="party-finale-actions">
             {rsvpLinks.email && <a className="party-button" href={rsvpLinks.email}>Confirmer par email <Arrow diagonal /></a>}
             {rsvpLinks.whatsapp && <a className="party-button" href={rsvpLinks.whatsapp} target="_blank" rel="noopener noreferrer">Confirmer sur WhatsApp <Arrow diagonal /></a>}
-            {!rsvpLinks.email && !rsvpLinks.whatsapp && <div className="party-rsvp-unavailable"><span className="party-rsvp-label">RSVP · DÉMONSTRATION</span><p>Le contact de l’organisateur n’est pas renseigné. La réponse sera disponible dans une invitation personnalisée.</p></div>}
+            {!rsvpLinks.email && !rsvpLinks.whatsapp && <div className="party-rsvp-unavailable"><span className="party-rsvp-label">RSVP · DÉMONSTRATION</span><p>RSVP disponible dans une invitation personnalisée.</p></div>}
             <a className="party-button party-button-outline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.address)}`} target="_blank" rel="noopener noreferrer">Voir l’adresse sur la carte <Arrow diagonal /></a>
           </div>
           <p className="party-rsvp-note">{rsvpLinks.email || rsvpLinks.whatsapp ? 'Votre messagerie s’ouvre : envoyez le message pour répondre. ' : ''}Aucune présence n’est enregistrée sur ce site.</p>

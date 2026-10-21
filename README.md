@@ -99,15 +99,15 @@ Pour une soirée, utiliser `date: '2027-06-19'` et `time: '20:30'`. Le champ `rs
 
 Le champ facultatif `puzzleCode: '274'` définit les trois chiffres du jeu de soirée. Il doit contenir exactement trois chiffres ; sa valeur par défaut est `274`. Chaque indice correctement placé révèle un chiffre, puis le visiteur saisit le code au clavier ou avec le pavé tactile. Ce code est un mécanisme de jeu visible dans le navigateur.
 
-Le son est facultatif et coupé au départ. De petits effets sont synthétisés localement avec Web Audio ; les démonstrations fonctionnent sans fichier musical. Pour personnaliser la musique d’une expérience, placer votre fichier dans `public/audio/` et ajouter à sa configuration :
+Le son reste facultatif. Les trois expériences disposent de compositions originales dans `public/audio/`, chargées au premier geste volontaire sur « Commencer » ou le bouton de son. Un choix de mute sauvegardé est respecté. Pour personnaliser la musique d’une expérience, placer votre fichier dans `public/audio/` et ajouter à sa configuration :
 
 ```ts
 audio: { src: '/audio/musique.mp3', volume: 0.25 },
 ```
 
-Le volume est facultatif, entre `0` et `1`. Une URL HTTP(S) est également acceptée. La musique démarre uniquement lorsque la personne active le bouton de son et s’arrête lorsqu’elle le désactive ; aucune lecture automatique. Omettre entièrement `audio` pour conserver seulement les effets synthétisés. Aucun service musical n’est requis ; utiliser un fichier dont vous possédez les droits.
+Le volume musical est facultatif, entre `0` et `1`. Une URL HTTP(S) est également acceptée. Aucun son ne précède une action volontaire. Le bouton de son coupe la musique et les effets ; le panneau ♫ règle séparément le master, la musique et les effets. Omettre `audio` pour utiliser la composition originale du thème. Les sources, droits, commandes de génération et limites de vérification sont dans [AUDIO.md](./AUDIO.md). Utiliser un fichier client dont vous possédez les droits.
 
-Les SVG de présentation et des expériences sont des dessins originaux du projet. Aucun asset commercial n’a été téléchargé. Les polices **Fraunces** et **DM Sans**, distribuées localement via Fontsource, sont sous **SIL Open Font License 1.1** ; leurs licences sont conservées dans `public/licenses/` et accompagnent le build. Utiliser uniquement des photos et musiques dont vous possédez les droits ou l’autorisation.
+Les SVG de présentation et des expériences sont des dessins originaux du projet. Aucun asset commercial n’a été téléchargé. Les trois musiques sont des compositions originales synthétisées localement ; leur script est fourni. Les polices **Fraunces** et **DM Sans**, distribuées localement via Fontsource, sont sous **SIL Open Font License 1.1** ; leurs licences sont conservées dans `public/licenses/` et accompagnent le build. Utiliser uniquement des photos et musiques dont vous possédez les droits ou l’autorisation.
 
 ## 5. Ajouter une création client
 
@@ -162,3 +162,17 @@ La vitrine utilise une entrée chorégraphiée, plusieurs profondeurs au pointeu
 Les ambiances CSS sont suspendues hors écran et dans un onglet masqué. Les événements, observers, frames et délais sont nettoyés au démontage ou en quittant la page. Le bouton de pause arrête les ambiances tout en conservant le feedback des interactions. `prefers-reduced-motion` supprime les mouvements décoratifs et les confettis. Les gestes ont une alternative au clavier ou par touches successives : la constellation se trace ou se touche étoile par étoile, et le ticket se reconstitue en choisissant une carte puis sa case. Le retour arrière conserve les découvertes ; le replay les efface.
 
 Aucune nouvelle bibliothèque d’animation n’a été ajoutée pour cette évolution : Motion, CSS et SVG suffisent, y compris pour la boîte à bague.
+
+## 10. Immersive V3
+
+Les six chapitres de chaque aventure et les configurations existantes sont conservés. Les interactions principales sont désormais gestuelles, avec les commandes clavier et boutons toujours disponibles :
+
+- Anniversaire : ballons à pousser, objets à soulever, nuage à gratter, étoiles à cueillir, maintien pour allumer les bougies, balayage pour souffler, ruban à tirer et couvercle à lever. Le carnet final se parcourt au doigt et avec ses flèches.
+- Demande : souvenirs à feuilleter, constellation avec traînée lumineuse, sceau et lettre à tirer, couvercle de bague à soulever. Les messages personnels et les trois réponses libres restent intacts.
+- Soirée : objets à déplacer, pièces du ticket à déposer dans leurs véritables cadres, touches sonores, déverrouillage et invitation à retourner.
+
+`src/components/gestures/` gère les Pointer Events, le seuil directionnel, la capture, l’annulation, le maintien et le grattage. Les gestes horizontaux laissent passer le scroll vertical. Les petites zones de manipulation verticale ont un `touch-action` adapté ; aucun geste de page ne permet de contourner les énigmes. Les mouvements du doigt modifient des variables CSS sans rendu React à chaque événement.
+
+Le moteur `src/lib/audio/AudioEngine.ts` conserve une boucle musicale par expérience, sépare musique/effets/master, effectue les fondus et le ducking, suspend un onglet masqué, signale les refus et nettoie ses ressources. Les scènes utilisent les sons contextuels de `sounds.ts`. Les particules, nuages, étoiles, objets et lumières gardent des durées distinctes. Les transitions ont une personnalité papier, céleste ou arcade. Le bouton de pause et les animations réduites restent disponibles.
+
+La V3 n’est pas poussée automatiquement pendant sa préparation : son brief demande un accord explicite avant le push sur `main`, lequel déclenchera le workflow de publication. Les mesures et vérifications de cette version sont dans [VALIDATION-V3.md](./VALIDATION-V3.md).
