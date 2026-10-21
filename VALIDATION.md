@@ -1,4 +1,4 @@
-# Validation de l’évolution immersive — 21 octobre 2026
+# Validation de l’évolution immersive et de GitHub Pages — 21 octobre 2026
 
 Projet exécuté localement sous Windows, avec le runtime Node 24.22.0 installé dans le projet. L’architecture Astro/React, les configurations et la direction artistique existantes sont conservées. Les contrôles ont été réalisés sur le build local, sans déploiement du site.
 
@@ -21,8 +21,8 @@ Illustrations SVG originales, polices locales avec licences, trois identités in
 | Bibliothèques | Aucune nouvelle dépendance ajoutée pour l’immersion |
 | `npm run build` | Réussi : six pages HTML, sitemap, robots et image PNG de partage statiques |
 | Contrôle Astro/TypeScript du build | 0 erreur, 0 avertissement, 0 indication |
-| `npm test` | 98 tests réussis dans cinq fichiers |
-| Suite Playwright complète | 54 tests réussis : 27 ordinateur et 27 mobile |
+| `npm test` | 106 tests réussis dans six fichiers, dont les règles de préfixe des routes et médias |
+| Suite Playwright complète | 60 tests réussis : 30 ordinateur et 30 mobile, avec le préfixe réel `/magical-moments/` |
 | Audits axe inclus dans Playwright | Écrans initiaux et états intermédiaires des trois aventures sans violation détectée |
 | Largeurs contrôlées | 320, 375, 390, 430, 768, 1024, 1440 px ; aucun débordement horizontal détecté |
 | Parcours et contrôles | Trois jeux complets, erreurs de jeu, verrouillages, tracé continu souris/tactile, choix libres, retour arrière, replay, reload, liens directs, son, menu, cadeau et création personnalisée |
@@ -33,12 +33,15 @@ Illustrations SVG originales, polices locales avec licences, trois identités in
 | Prévisualisation de production | Fonctionnelle sur le port 4323, utilisée pour les tests, captures et mesures |
 | Serveur de développement | Relancé sur le port 4321 ; quatre routes HTTP 200, hydratation et première interaction des trois jeux vérifiées sans erreur navigateur |
 | Contrôle visuel | Vitrine, jardin, constellation, boîte fermée/ouverte, assemblage d’indices et verrou sur mobile ; plusieurs scènes également sur ordinateur |
+| Configuration Pages | Origine, préfixe et URL publique complète ; domaine personnalisé et dépôt racine également contrôlés |
+| Ressources et SEO | Cinq routes, hydratation React, polices, scripts, favicon, PNG de partage, canonicals, sitemap et `noindex` vérifiés avec le sous-chemin |
+| Sources à publier | Deux commits antérieurs et fichiers suivis examinés ; aucun `.env`, dossier local de QA, média privé ou motif courant de clé détecté |
 
 Les tests mobiles utilisent une émulation iPhone dans Chromium. Ils exercent de vrais événements tactiles émulés, y compris un geste continu sur la constellation ; ils ne remplacent pas un contrôle sur un appareil physique. Les tests de largeur couvrent les écrans initiaux aux sept dimensions, et les parcours complets contrôlent aussi les débordements des scènes internes sur ordinateur et à 390 px.
 
 ## Lighthouse
 
-Mesures Lighthouse 12.8.2 sur la vitrine servie depuis le build local, dans Chromium 147. Résultats de laboratoire : ils ne garantissent pas les mêmes scores sur le futur hébergement et après ajout de médias. Le lancement CLI initial a échoué sur un interstitiel Chrome ; les mesures valides ont ensuite été réalisées avec Lighthouse connecté au Chromium lancé par Playwright. Aucun avertissement d’exécution dans ces deux rapports.
+Mesures Lighthouse 12.8.2 sur la vitrine servie depuis le build local, dans Chromium 147, avant l’adaptation du chemin GitHub Pages. Aucun nouveau score Lighthouse public n’est annoncé. Résultats de laboratoire : ils ne garantissent pas les mêmes scores sur le futur hébergement et après ajout de médias. Le lancement CLI initial a échoué sur un interstitiel Chrome ; les mesures valides ont ensuite été réalisées avec Lighthouse connecté au Chromium lancé par Playwright. Aucun avertissement d’exécution dans ces deux rapports.
 
 | Profil | Performance | Accessibilité | Bonnes pratiques | SEO |
 | --- | ---: | ---: | ---: | ---: |
@@ -53,9 +56,9 @@ La fluidité sur des appareils physiques et un nombre d’images par seconde n�
 
 ## Avant une livraison commerciale
 
-- Renseigner les vraies coordonnées et l’URL publique dans `src/site-config.ts`, puis reconstruire.
+- Renseigner les vraies coordonnées dans `src/site-config.ts` ; l’URL publique est déjà configurée pour GitHub Pages.
 - Remplacer les données fictives par les contenus autorisés du destinataire ; vérifier les photos, musiques et leurs droits.
 - Vérifier sur de vrais appareils iOS et Android : les tests mobiles exécutés utilisent une émulation Chromium, pas Safari ni un téléphone physique.
-- Recontrôler performance, partage et liens de contact sur Cloudflare Pages après publication.
+- Recontrôler performance, partage et liens de contact sur GitHub Pages après publication.
 
 L’accès privé authentifié, la réservation enregistrée et le paiement restent hors périmètre de ce MVP statique. `noindex` ne protège pas un contenu privé. L’email ou WhatsApp prérempli doit être envoyé par l’invité ; le site n’enregistre aucune présence.

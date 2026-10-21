@@ -1,3 +1,4 @@
+import { appPath } from './paths';
 import { expect, test, type Page, type Locator } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { birthdayDemo } from '../../src/data/birthday-demo';
@@ -32,7 +33,7 @@ async function hydrate(page: Page) {
 }
 
 async function openExperience(page: Page, path: string) {
-  const response = await page.goto(path);
+  const response = await page.goto(appPath(path));
   expect(response?.status(), `La route ${path} doit être accessible directement`).toBe(200);
   await hydrate(page);
 }
@@ -368,7 +369,7 @@ for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
     test.setTimeout(60_000);
     await page.setViewportSize({ width, height: 900 });
     for (const route of ['/', '/demo/anniversaire', '/demo/mariage', '/demo/evenement']) {
-      const response = await page.goto(route);
+      const response = await page.goto(appPath(route));
       expect(response?.status()).toBe(200);
       if (route !== '/') await hydrate(page);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

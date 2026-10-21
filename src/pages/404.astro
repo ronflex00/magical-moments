@@ -1,5 +1,6 @@
 ---
+import { withBase } from '../lib/paths';
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Une surprise égarée" noindex={true}><main id="contenu" class="error-page"><span aria-hidden="true">✳</span><p>Erreur 404</p><h1>Cette surprise<br />s’est égarée.</h1><p>Il y a encore de jolis moments à découvrir.</p><a class="button button-primary" href="/">Retour aux expériences ↗</a></main></BaseLayout>
+<BaseLayout title="Une surprise égarée" noindex={true}><main id="contenu" class="error-page"><span aria-hidden="true">✳</span><p>Erreur 404</p><h1>Cette surprise<br />s’est égarée.</h1><p>Il y a encore de jolis moments à découvrir.</p><a class="button button-primary" href={withBase('/')}>Retour aux expériences ↗</a></main></BaseLayout>
 <style>.error-page{min-height:100svh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;text-align:center;padding:30px}.error-page>span{font-size:70px;color:var(--coral)}h1{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,8vw,75px);line-height:1.1}p{font-size:14px}</style>

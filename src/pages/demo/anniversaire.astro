@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../../lib/paths';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BirthdayExperience from '../../experiences/birthday/BirthdayExperience';
 import { birthdayDemo } from '../../data/birthday-demo';
@@ -6,5 +7,5 @@ import { siteConfig } from '../../site-config';
 ---
 <BaseLayout title={`Une quête d’anniversaire — ${siteConfig.name}`} description={birthdayDemo.metadata.description} noindex={true} themeColor={birthdayDemo.colors.background}>
   <main id="contenu"><BirthdayExperience client:load config={birthdayDemo} /></main>
-  <noscript><p>Activez JavaScript pour jouer à cette surprise. <a href="/">Retour aux expériences</a>.</p></noscript>
+  <noscript><p>Activez JavaScript pour jouer à cette surprise. <a href={withBase('/')}>Retour aux expériences</a>.</p></noscript>
 </BaseLayout>

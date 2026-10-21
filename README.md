@@ -20,7 +20,7 @@ Installer aussi les dépendances de développement et autoriser les scripts d’
 npm run dev
 ```
 
-Ouvrir l’adresse locale affichée par Astro, habituellement `http://127.0.0.1:4321`.
+Ouvrir l’adresse locale affichée par Astro, `http://127.0.0.1:4321/magical-moments/`.
 
 | Route | Contenu |
 | --- | --- |
@@ -59,13 +59,13 @@ Modifier **`src/site-config.ts`** :
 
 - `name` : nom commercial.
 - `description` : description générale du site.
-- `url` : origine publique complète, par exemple votre URL Pages ou votre domaine avec `https://`.
+- `url` : URL publique calculée depuis la configuration Astro, incluant `/magical-moments/`. Pour changer de domaine, utiliser `SITE_URL` et `BASE_PATH` comme décrit dans `DEPLOYMENT.md`.
 - `email` : adresse de contact réelle.
 - `social.instagram`, `social.tiktok`, `social.whatsapp` : URL complète de chaque profil ou conversation.
 
 Les coordonnées sont volontairement vides. Les liens non renseignés restent masqués ; le contact indique alors que les demandes ouvriront bientôt. Aucun compte ou témoignage fictif n’est affiché. Le WhatsApp de la vitrine attend une **URL** ; celui d’une invitation attend un **numéro international**, voir section 4.
 
-Renseigner `url` avant publication, puis reconstruire : les URL canoniques, `og:url`, l’image de partage absolue, le sitemap et sa déclaration dans `robots.txt` en dépendent. Sans cette valeur, aucune origine fictive n’est inventée et le sitemap reste vide. Les créations `noindex` sont exclues du sitemap.
+L’URL publique est configurée pour `https://ronflex00.github.io/magical-moments/`. Les URL canoniques, `og:url`, l’image de partage, le sitemap et sa déclaration dans `robots.txt` incluent le chemin de base. Les démonstrations et créations `noindex` sont exclues du sitemap.
 
 Les métadonnées communes sont dans `src/layouts/BaseLayout.astro`. Le favicon est `public/favicon.svg` et l’image Open Graph `/images/share.png` (1200 × 630) est générée au build par `src/pages/images/share.png.ts`, avec le nom de marque configuré. Le partage mobile utilise la feuille de partage native quand elle est disponible, sinon la copie du lien.
 
@@ -123,30 +123,15 @@ L’exemple **`src/data/creations/anniversaire-louise.ts`** génère `/creation/
 
 Toute nouvelle création ou modification nécessite un **nouveau build et déploiement**. Les fichiers TypeScript ne sont pas un outil de saisie en ligne ; ne laisser dans ce dossier que les modules de création à publier.
 
-## 6. Déployer sur Cloudflare Pages depuis GitHub
+## 6. Déployer sur GitHub Pages
 
-1. Pousser le projet dans votre dépôt GitHub sur la branche `main`. Ne pas ajouter `node_modules/`, `dist/` ni de secrets. La mise en ligne sur Cloudflare Pages se configure séparément.
-2. Dans Cloudflare Pages, connecter ce dépôt et choisir un déploiement de site statique.
-3. Appliquer les paramètres suivants :
+Le workflow `.github/workflows/deploy.yml` construit et publie le projet après chaque push sur `main`, avec Node 24, npm, les tests unitaires et le contrôle TypeScript. Il peut aussi être exécuté manuellement. La source Pages doit être **GitHub Actions**.
 
-| Paramètre | Valeur |
-| --- | --- |
-| Branche de production | `main` |
-| Répertoire racine | Racine du dépôt |
-| Commande de build | `npm run build` |
-| Répertoire de sortie | `dist` |
-| Variable d’environnement | `NODE_VERSION=24` |
-
-4. Lancer le déploiement, récupérer l’URL publique, puis la renseigner dans `siteConfig.url` et publier ce changement.
-5. Tester les trois démonstrations, la création d’exemple, les contacts et l’aperçu de partage sur l’URL publique.
-
-Le même déploiement sert la vitrine et toutes les expériences. Aucun adaptateur serveur Astro, Worker, service de base de données ou secret n’est requis. `public/_headers` ajoute quelques en-têtes de navigateur sur Pages. L’offre gratuite peut accueillir ce build statique dans les limites du service et de vos usages.
+Les cinq URL exactes, la procédure de publication, les tests sur téléphone et le retour arrière sont décrits dans [DEPLOYMENT.md](./DEPLOYMENT.md). Un seul build sert la vitrine et toutes les expériences. Aucun backend ni secret n’est nécessaire.
 
 ## 7. Utiliser un domaine personnalisé
 
-Ajouter le domaine dans les paramètres de domaine personnalisé du projet Pages. Suivre les indications de Cloudflare pour les enregistrements DNS et attendre l’activation HTTPS. Un domaine acheté séparément peut être payant ; l’hébergement statique n’impose pas d’acheter un domaine.
-
-Remplacer ensuite `siteConfig.url` par l’origine définitive, reconstruire et redéployer. Vérifier les URL canoniques, `/sitemap.xml`, `/robots.txt` et l’image de partage. Les aperçus des réseaux sociaux peuvent conserver une ancienne version en cache.
+Configurer le domaine dans GitHub Pages, puis les variables Actions `SITE_URL=https://votre-domaine.fr` et `BASE_PATH=/`. Ajouter `public/CNAME` et reconstruire. Les détails DNS et les contrôles à réaliser sont dans [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## 8. Limites du statique et confidentialité
 

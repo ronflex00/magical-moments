@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../../lib/paths';
 import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BirthdayExperience from '../../experiences/birthday/BirthdayExperience';
@@ -15,5 +16,5 @@ const { config } = Astro.props as { config: CreationConfig };
     {config.type === 'proposal' && <ProposalExperience client:load config={config} />}
     {config.type === 'party' && <PartyExperience client:load config={config} />}
   </main>
-  <noscript><p>Activez JavaScript pour vivre cette expérience. <a href="/">Retour à l’accueil</a>.</p></noscript>
+  <noscript><p>Activez JavaScript pour vivre cette expérience. <a href={withBase('/')}>Retour à l’accueil</a>.</p></noscript>
 </BaseLayout>

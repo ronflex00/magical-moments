@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion, MotionConfig, useReducedMotion, useIsPresent } from 'motion/react';
 import { siteConfig } from '../../site-config';
+import { withBase } from '../../lib/paths';
 import { applyMotionQuality, motionSettings, observeMotionScope } from '../../lib/animation/settings';
 import './experience-shell.css';
 
@@ -29,7 +30,7 @@ export function ExperienceShell({ theme, label, step, steps, onReplay, sound, on
   return <MotionConfig reducedMotion="user">
     <div ref={scope} className={`experience-shell theme-${theme} ${paused ? 'is-motion-paused' : ''}`}>
       <header className="experience-topbar">
-        <a href="/" className="experience-home" aria-label={`Retour à ${siteConfig.name}`}><span aria-hidden="true">✳</span> {siteConfig.name}</a>
+        <a href={withBase('/')} className="experience-home" aria-label={`Retour à ${siteConfig.name}`}><span aria-hidden="true">✳</span> {siteConfig.name}</a>
         <div className="experience-tools">
           {onBack && <button type="button" className="experience-back" onClick={onBack} disabled={step === 0} aria-label="Étape précédente">←</button>}
           <button type="button" className="ambient-toggle" aria-label={paused ? 'Reprendre les animations' : 'Mettre les animations en pause'} aria-pressed={paused} onClick={() => setPaused(value => !value)}><span aria-hidden="true">{paused ? '▷' : 'Ⅱ'}</span><span>Animations</span></button>
@@ -43,7 +44,7 @@ export function ExperienceShell({ theme, label, step, steps, onReplay, sound, on
         <span className="experience-count">{String(step + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}</span>
       </div>
       <div className="experience-content" aria-label={steps[step]}>{children}</div>
-      <footer className="experience-footer"><a href="/#experiences">← Toutes les expériences</a><button type="button" onClick={share}>Partager cette surprise ↗</button><span role="status">{shareStatus}</span></footer>
+      <footer className="experience-footer"><a href={withBase('/#experiences')}>← Toutes les expériences</a><button type="button" onClick={share}>Partager cette surprise ↗</button><span role="status">{shareStatus}</span></footer>
     </div>
   </MotionConfig>;
 }

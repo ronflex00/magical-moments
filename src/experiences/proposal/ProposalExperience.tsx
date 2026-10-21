@@ -1,3 +1,4 @@
+import { withBase } from '../../lib/paths';
 import { useEffect, useId, useReducer, useRef, type CSSProperties, type ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import type { ProposalConfig } from '../../data/types';
@@ -96,7 +97,7 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
               <AnimatePresence mode="wait" initial={false}>
                 {selected ? <motion.div key={state.selectedMemory} initial={{ opacity: 0, y: reduced ? 0 : 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : .25 }}>
                   <span className="proposal-memory-number">SOUVENIR 0{(state.selectedMemory ?? 0) + 1}</span>
-                  {selected.photo && <img className="proposal-memory-photo" src={selected.photo.src} alt={selected.photo.alt} width="480" height="300" loading="lazy"/>}
+                  {selected.photo && <img className="proposal-memory-photo" src={withBase(selected.photo.src)} alt={selected.photo.alt} width="480" height="300" loading="lazy"/>}
                   <h2>{selected.title}</h2><p>{selected.message}</p>
                 </motion.div> : <div className="proposal-memory-empty"><Star/><p>Les plus belles histoires sont faites de petits moments.</p><span>Choisis une étoile dans notre ciel.</span></div>}
               </AnimatePresence>
@@ -143,7 +144,7 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
           </div>
           {state.answer === null ? <div className="proposal-answer-options"><button type="button" className="proposal-button" onClick={() => { play('celebrate'); dispatch({ type: 'answer', answer: 'yes' }); }}>Oui, mille fois oui <Star/></button><button type="button" className="proposal-secondary-button" onClick={() => dispatch({ type: 'answer', answer: 'time' })}>J’ai besoin de temps</button><button type="button" className="proposal-text-button" onClick={() => dispatch({ type: 'answer', answer: 'no' })}>Non, je ne le souhaite pas</button></div> : <div className="proposal-final-actions"><button type="button" className="proposal-button" onClick={replay}>Revivre notre histoire <Arrow/></button><button type="button" className="proposal-text-button" onClick={() => dispatch({ type: 'answer', answer: null })}>Revenir aux réponses</button></div>}
           <p className="proposal-small-note">Ce choix reste dans l’instant. Aucune réponse n’est enregistrée ni envoyée.</p>
-          {state.answer === 'yes' && config.photos.length > 0 && <div className="proposal-photo-strip">{config.photos.map((photo) => <figure key={photo.src}><img src={photo.src} alt={photo.alt} width="320" height="320" loading="lazy"/>{photo.caption && <figcaption>{photo.caption}</figcaption>}</figure>)}</div>}
+          {state.answer === 'yes' && config.photos.length > 0 && <div className="proposal-photo-strip">{config.photos.map((photo) => <figure key={photo.src}><img src={withBase(photo.src)} alt={photo.alt} width="320" height="320" loading="lazy"/>{photo.caption && <figcaption>{photo.caption}</figcaption>}</figure>)}</div>}
         </section>}
       </SceneTransition>
       <div className="proposal-bottom-mark" aria-hidden="true"><span/>UNE HISTOIRE À DEUX<span/></div>

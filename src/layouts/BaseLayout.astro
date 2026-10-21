@@ -3,10 +3,11 @@ import '../styles/global.css';
 import '../styles/accessibility.css';
 import '../styles/immersion.css';
 import { siteConfig } from '../site-config';
+import { withBase } from '../lib/paths';
 interface Props { title?: string; description?: string; noindex?: boolean; themeColor?: string }
 const { title = `${siteConfig.name} — Des surprises à vivre.`, description = siteConfig.description, noindex = false, themeColor = '#fbf8f1' } = Astro.props;
 const canonical = siteConfig.url ? new URL(Astro.url.pathname, siteConfig.url).href : undefined;
-const socialImage = siteConfig.url ? new URL('/images/share.png', siteConfig.url).href : '/images/share.png';
+const socialImage = siteConfig.url ? new URL(withBase('/images/share.png'), siteConfig.url).href : withBase('/images/share.png');
 ---
 <!doctype html>
 <html lang="fr">
@@ -27,7 +28,7 @@ const socialImage = siteConfig.url ? new URL('/images/share.png', siteConfig.url
     <meta property="og:image:alt" content="Une surprise numérique, beaucoup d’émotions." />
     <meta name="twitter:card" content="summary_large_image" />
     {canonical && <><link rel="canonical" href={canonical} /><meta property="og:url" content={canonical} /></>}
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <title>{title}</title>
   </head>
   <body><a class="skip-link" href="#contenu">Aller au contenu</a><slot /></body>

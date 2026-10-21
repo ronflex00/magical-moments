@@ -1,3 +1,4 @@
+import { withBase } from '../paths';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** Petits sons synthétisés localement ; jamais d'audio automatique ni de fichier distant. */
@@ -7,7 +8,7 @@ export function useSound(audio?: { src: string; volume?: number }) {
   const music = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     if (!audio?.src) return;
-    const player = new Audio(audio.src);
+    const player = new Audio(withBase(audio.src));
     player.preload = 'none';
     player.loop = true;
     player.volume = Math.max(0, Math.min(1, audio.volume ?? 0.25));

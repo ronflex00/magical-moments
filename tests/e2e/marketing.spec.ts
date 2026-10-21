@@ -1,9 +1,10 @@
+import { appPath } from './paths';
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { siteConfig } from '../../src/site-config';
 
 test('La pause de l’ambiance conserve les interactions du cadeau',async({page})=>{
-  await page.goto('/');
+  await page.goto(appPath('/'));
   await page.getByRole('button',{name:'Mettre les animations ambiantes en pause',exact:true}).click();
   await expect(page.locator('.art-flower')).toHaveCSS('animation-play-state','paused');
   await page.locator('.surprise-art').click();
@@ -13,7 +14,7 @@ test('La pause de l’ambiance conserve les interactions du cadeau',async({page}
 });
 
 test('La personnalisation locale modifie le prénom, le mot et la palette', async ({ page }) => {
-  await page.goto('/');
+  await page.goto(appPath('/'));
   const preview=page.locator('.personal-playground');
   await preview.getByLabel('Son prénom', {exact:true}).fill('Charlie');
   await expect(preview.locator('.preview-name')).toHaveText('Pour Charlie.');
@@ -26,14 +27,14 @@ test('La personnalisation locale modifie le prénom, le mot et la palette', asyn
 });
 
 test('Les animations du hero sont suspendues hors écran et la navigation revient correctement', async ({ page }) => {
-  await page.goto('/');
+  await page.goto(appPath('/'));
   const hero=page.locator('.hero-art');
   await expect(hero).toHaveAttribute('data-motion-active','true');
   await page.locator('#contact').scrollIntoViewIfNeeded();
   await expect(hero).toHaveAttribute('data-motion-active','false');
   await expect(hero.locator('.art-flower')).toHaveCSS('animation-play-state','paused');
   await page.locator('.card-try').first().click();
-  await expect(page).toHaveURL(/\/demo\/anniversaire$/);
+  await expect(page).toHaveURL(/\/demo\/anniversaire\/?$/);
   await page.goBack();
   await page.locator('.surprise-art').scrollIntoViewIfNeeded();
   await expect(hero).toHaveAttribute('data-motion-active','true');
@@ -44,7 +45,7 @@ test('Les animations du hero sont suspendues hors écran et la navigation revien
 });
 
 test('Le cadeau réagit au pointeur sur ordinateur et au tap sur mobile', async ({page,isMobile})=>{
-  await page.goto('/');
+  await page.goto(appPath('/'));
   const hero=page.locator('.hero-art');
   const gift=page.locator('.surprise-art');
   if(isMobile) await gift.tap();
@@ -63,7 +64,7 @@ test('Le cadeau réagit au pointeur sur ordinateur et au tap sur mobile', async 
 
 test('Le menu mobile s’ouvre, se ferme au choix d’un lien et avec Échap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto(appPath('/'));
   const toggle = page.getByRole('button', { name: 'Ouvrir le menu', exact: true });
   const navigation = page.getByRole('navigation', { name: 'Navigation mobile' });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -82,7 +83,7 @@ test('Le menu mobile s’ouvre, se ferme au choix d’un lien et avec Échap', a
 });
 
 test('Le cadeau de la vitrine révèle et referme sa surprise au clavier', async ({ page }) => {
-  await page.goto('/');
+  await page.goto(appPath('/'));
   const gift = page.getByRole('button', { name: 'Ouvrir le cadeau et découvrir un petit message' });
   const surprise = page.locator('#hero-surprise');
   await expect(gift).toHaveAttribute('aria-expanded', 'false');
@@ -98,22 +99,22 @@ test('Le cadeau de la vitrine révèle et referme sa surprise au clavier', async
 });
 
 test('Les trois créations possèdent un lien de démonstration fonctionnel', async ({ page }) => {
-  const destinations = ['/demo/anniversaire', '/demo/mariage', '/demo/evenement'];
-  await page.goto('/');
+  const destinations = ['/demo/anniversaire/', '/demo/mariage/', '/demo/evenement/'];
+  await page.goto(appPath('/'));
   await expect(page.getByRole('link', { name: 'Essayer cette expérience', exact: true })).toHaveCount(3);
   for (let index = 0; index < destinations.length; index += 1) {
     const link = page.getByRole('link', { name: 'Essayer cette expérience', exact: true }).nth(index);
-    await expect(link).toHaveAttribute('href', destinations[index]);
+    await expect(link).toHaveAttribute('href', appPath(destinations[index]));
     await link.click();
     await expect(page).toHaveURL(new RegExp(`${destinations[index]}$`));
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.getByRole('link', { name: `Retour à ${siteConfig.name}` })).toHaveAttribute('href', '/');
-    await page.goto('/');
+    await expect(page.getByRole('link', { name: `Retour à ${siteConfig.name}` })).toHaveAttribute('href', appPath('/'));
+    await page.goto(appPath('/'));
   }
 });
 
 test('Le contact et les métadonnées ne publient aucune fausse coordonnée', async ({ page }) => {
-  await page.goto('/');
+  await page.goto(appPath('/'));
   await expect(page).toHaveTitle(new RegExp(siteConfig.name));
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', siteConfig.description);
@@ -136,7 +137,7 @@ for (const route of ['/', '/demo/anniversaire', '/demo/mariage', '/demo/evenemen
   test(`Accessibilité WCAG A/AA de ${route}`, async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto(route);
+    await page.goto(appPath(route));
     if (route !== '/') {
       await expect(page.locator('astro-island').first()).not.toHaveAttribute('ssr');
     }

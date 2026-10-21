@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../../lib/paths';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PartyExperience from '../../experiences/party/PartyExperience';
 import { partyDemo } from '../../data/party-demo';
@@ -6,5 +7,5 @@ import { siteConfig } from '../../site-config';
 ---
 <BaseLayout title={`La soirée secrète — ${siteConfig.name}`} description={partyDemo.metadata.description} noindex={true} themeColor={partyDemo.colors.background}>
   <main id="contenu"><PartyExperience client:load config={partyDemo} /></main>
-  <noscript><p>Activez JavaScript pour résoudre l’enquête. <a href="/">Retour aux expériences</a>.</p></noscript>
+  <noscript><p>Activez JavaScript pour résoudre l’enquête. <a href={withBase('/')}>Retour aux expériences</a>.</p></noscript>
 </BaseLayout>
