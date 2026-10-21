@@ -5,8 +5,11 @@ import { ExperienceShell, SceneTransition, ConfettiEffect } from '../../componen
 import { useSound } from '../../lib/audio/useSound';
 import { initialProposalState, proposalReducer } from './scenes/proposal-state';
 import './proposal.css';
+import './proposal-immersion.css';
+import { ConstellationWeave } from './scenes/ConstellationWeave';
+import { tactileFeedback } from '../../lib/animation/settings';
 
-const steps = ['Le début', 'Nos souvenirs', 'La lettre', 'La question', 'Notre moment'];
+const steps = ['Le début', 'Nos souvenirs', 'Le fil étoilé', 'La lettre', 'La question', 'Notre moment'];
 const stars = Array.from({ length: 38 }, (_, i) => ({
   x: (i * 37 + 9) % 100, y: (i * 23 + 7) % 91,
   size: i % 5 === 0 ? 3 : 1.5, delay: `${(i % 7) * -.8}s`,
@@ -43,34 +46,13 @@ function CelestialArt() {
   </svg>;
 }
 
-function RingBox({ open, reduced }: { open: boolean; reduced: boolean | null }) {
-  const id = useId();
-  return <svg className="proposal-ring-art" viewBox="0 0 420 340" fill="none" aria-hidden="true">
-    <defs>
-      <linearGradient id={`${id}-gold`} x1="180" y1="100" x2="250" y2="185" gradientUnits="userSpaceOnUse"><stop stopColor="#fff1d6"/><stop offset=".48" stopColor="#c99e5c"/><stop offset="1" stopColor="#fae1b3"/></linearGradient>
-      <linearGradient id={`${id}-box`} x1="120" y1="170" x2="300" y2="310" gradientUnits="userSpaceOnUse"><stop stopColor="#576576"/><stop offset="1" stopColor="#1d293b"/></linearGradient>
-      <radialGradient id={`${id}-glow`}><stop stopColor="#e9ce9c" stopOpacity=".3"/><stop offset="1" stopColor="#e9ce9c" stopOpacity="0"/></radialGradient>
-    </defs>
-    <motion.circle cx="210" cy="150" r="145" fill={`url(#${id}-glow)`} animate={{ opacity: open ? 1 : .2, scale: open ? 1.05 : .8 }} transition={{ duration: reduced ? 0 : 1 }}/>
-    <ellipse cx="210" cy="301" rx="122" ry="13" fill="#050b14" fillOpacity=".3"/>
-    <path d="m104 213 106-34 106 34v62c-60 30-152 30-212 0v-62Z" fill={`url(#${id}-box)`} stroke="#a6a5a4" strokeOpacity=".5"/>
-    <ellipse cx="210" cy="215" rx="105" ry="38" fill="#273748" stroke="#99a0a4" strokeOpacity=".5"/>
-    <ellipse cx="210" cy="215" rx="89" ry="28" fill="#172333"/>
-    <path d="M159 218c32-7 70-7 102 0" stroke="#0d1725" strokeWidth="7" strokeLinecap="round"/>
-    <motion.g animate={{ opacity: open ? 1 : 0, y: open ? 0 : 54 }} transition={{ duration: reduced ? 0 : .85, delay: reduced ? 0 : .18 }}>
-      <ellipse cx="210" cy="177" rx="26" ry="35" stroke={`url(#${id}-gold)`} strokeWidth="6"/>
-      <path d="m193 134 8-12h18l8 12-17 17-17-17Z" fill="#ebf3ee" stroke="#fff3d8" strokeWidth="1.3"/>
-      <path d="m193 134 17 1 17-1m-26-12 9 13 9-13m-9 13v16" stroke="#95a8b4" strokeWidth="1"/>
-      <path d="m179 105 2.3 8.7 8.7 2.3-8.7 2.3-2.3 8.7-2.3-8.7-8.7-2.3 8.7-2.3 2.3-8.7Zm64 28 1.6 6.4 6.4 1.6-6.4 1.6-1.6 6.4-1.6-6.4-6.4-1.6 6.4-1.6 1.6-6.4Z" fill="#fff0ce"/>
-    </motion.g>
-    <motion.g style={{ transformOrigin: '210px 193px' }} animate={{ y: open ? -79 : 0, rotateX: open ? 35 : 0, scaleY: open ? .79 : 1 }} transition={{ duration: reduced ? 0 : .95, ease: [.22, 1, .36, 1] }}>
-      <path d="m104 174 106-35 106 35v39c-61 28-151 28-212 0v-39Z" fill={`url(#${id}-box)`} stroke="#a6a5a4" strokeOpacity=".7"/>
-      <ellipse cx="210" cy="174" rx="106" ry="38" fill="#3c4c60" stroke="#a6a5a4" strokeOpacity=".6"/>
-      <ellipse cx="210" cy="174" rx="92" ry="28" stroke="#d1b689" strokeOpacity=".7"/>
-      <path d="m210 158 3 11 11 3-11 3-3 11-3-11-11-3 11-3 3-11Z" fill="#dfc292"/>
-    </motion.g>
-    <path d="M203 262h14v9h-14z" fill="#d4b782"/>
-  </svg>;
+function RingBox({ open }: { open: boolean; reduced?: boolean | null }) {
+  return <div className={`proposal-box-scene ${open ? 'is-open' : ''}`} aria-hidden="true">
+    <div className="proposal-box-shadow"/><div className="proposal-box-base"/>
+    <div className="proposal-box-ring"><svg viewBox="0 0 100 130" fill="none"><ellipse cx="50" cy="78" rx="27" ry="36" stroke="#d5b477" strokeWidth="6"/><ellipse cx="50" cy="78" rx="24" ry="33" stroke="#f6e2b6" strokeWidth="1.5"/><path d="m30 38 10-15h20l10 15-20 23-20-23Z" fill="#f1f5e9" stroke="#f1d59f" strokeWidth="2"/><path d="m30 38 20 2 20-2M40 23l10 17 10-17M50 40v21" stroke="#9eafb5" strokeWidth="1.2"/><path d="m50 8 2 8 8 2-8 2-2 8-2-8-8-2 8-2Z" fill="#fff1ca"/></svg></div>
+    <div className="proposal-box-lid"><div className="proposal-lid-face">✧</div><div className="proposal-lid-face proposal-lid-inside">✧</div></div>
+    <span className="proposal-ring-glint">✧</span><span className="proposal-ring-glint">✧</span>
+  </div>;
 }
 
 export default function ProposalExperience({ config }: { config: ProposalConfig }) {
@@ -87,8 +69,9 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
   } as CSSProperties;
 
   return <div className="proposal-experience" style={style}>
-    <div className="proposal-sky" aria-hidden="true">{stars.map((star, i) => <i key={i} style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, animationDelay: star.delay }}/>)}</div>
-    <ExperienceShell theme="proposal" label="La grande question" step={state.step} steps={steps} onReplay={replay} sound={enabled} onToggleSound={toggle}>
+
+    <ExperienceShell theme="proposal" label="La grande question" step={state.step} steps={steps} onReplay={replay} onBack={() => dispatch({ type: 'back' })} sound={enabled} onToggleSound={toggle}>
+    <div className="proposal-sky" aria-hidden="true" data-ambient>{stars.map((star, i) => <i key={i} style={{ left: `${star.x}%`, top: `${star.y}%`, width: star.size, height: star.size, animationDelay: star.delay }}/>)}</div>
       <SceneTransition sceneKey={state.step}>
         {state.step === 0 && <section className="proposal-scene proposal-intro" aria-label="Le début de notre histoire">
           <div className="proposal-intro-copy">
@@ -98,7 +81,7 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
             <button type="button" className="proposal-button" onClick={next}>Commencer notre histoire <Arrow/></button>
             <p className="proposal-small-note">Quelques étoiles. Quelques souvenirs. Et nous.</p>
           </div>
-          <div className="proposal-art-wrap"><CelestialArt/><span className="proposal-art-caption">{config.firstName} <span>&</span> {config.partnerName}</span></div>
+          <div className="proposal-art-wrap" data-ambient><CelestialArt/><span className="proposal-art-caption">{config.firstName} <span>&</span> {config.partnerName}</span></div>
         </section>}
 
         {state.step === 1 && <section className="proposal-scene proposal-memories" aria-label="Nos souvenirs">
@@ -122,12 +105,19 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
           <button type="button" className="proposal-button" onClick={next} disabled={state.memories.length < 3}>{state.memories.length < 3 ? 'Retrouve nos trois souvenirs' : 'La suite de notre histoire'} <Arrow/></button>
         </section>}
 
-        {state.step === 2 && <section className="proposal-scene proposal-letter-scene" aria-label="La lettre secrète">
-          <SceneTitle eyebrow="Chapitre II · Les mots du cœur">Il fallait que<br/><em>je te le dise.</em></SceneTitle>
+        {state.step === 2 && <section className="proposal-scene proposal-thread-scene" aria-label="Le fil de notre histoire">
+          <SceneTitle eyebrow="Chapitre II · Ce qui nous relie">D’un petit instant,<br/><em>à l’infini.</em></SceneTitle>
+          <p className="proposal-description">Relie les étoiles dans l’ordre pour dessiner le fil de notre histoire.</p>
+          <ConstellationWeave connected={state.constellation} connect={index => { dispatch({ type: 'connect', index }); play('chime'); tactileFeedback(); }}/>
+          <button type="button" className="proposal-button" disabled={state.constellation.length < 5} onClick={next}>Découvrir la lettre <Arrow/></button>
+        </section>}
+
+        {state.step === 3 && <section className="proposal-scene proposal-letter-scene" aria-label="La lettre secrète">
+          <SceneTitle eyebrow="Chapitre III · Les mots du cœur">Il fallait que<br/><em>je te le dise.</em></SceneTitle>
           {!state.letterOpen ? <>
-            <button type="button" className="proposal-envelope-button" onClick={() => { play('pop'); dispatch({ type: 'letter' }); }} aria-label="Ouvrir la lettre de votre histoire">
-              <svg viewBox="0 0 420 290" fill="none" aria-hidden="true"><path d="m48 83 162-53 162 53v159H48V83Z" fill="#dac7a9"/><path d="M61 88h298v145H61z" fill="#fbf0da"/><path d="m48 83 162 109L372 83v159H48V83Z" fill="#e8d7ba"/><path d="m48 242 139-104c14-11 32-11 46 0l139 104H48Z" fill="#f2e4cc"/><path d="m48 83 162 109L372 83" stroke="#b7996b" strokeOpacity=".5"/><circle cx="210" cy="170" r="25" fill="#aa756c"/><circle cx="210" cy="170" r="20" stroke="#d6a59a"/><path d="m210 156 3 11 11 3-11 3-3 11-3-11-11-3 11-3 3-11Z" fill="#efc6b7"/></svg>
-              <span>Briser le sceau <Arrow/></span>
+            <button type="button" className={`proposal-envelope-button ${state.sealBroken ? 'is-unsealed' : ''}`} onClick={() => { play('pop'); tactileFeedback(); dispatch({ type: state.sealBroken ? 'letter' : 'seal' }); }} aria-label={state.sealBroken ? 'Déplier la lettre' : 'Briser le sceau. Ouvrir la lettre de votre histoire'}>
+              <svg viewBox="0 0 420 290" fill="none" aria-hidden="true"><path d="m48 83 162-53 162 53v159H48V83Z" fill="#dac7a9"/><path d="M61 88h298v145H61z" fill="#fbf0da"/><path d="m48 83 162 109L372 83v159H48V83Z" fill="#e8d7ba"/><path d="m48 242 139-104c14-11 32-11 46 0l139 104H48Z" fill="#f2e4cc"/><path d="m48 83 162 109L372 83" stroke="#b7996b" strokeOpacity=".5"/><g className="proposal-wax"><circle cx="210" cy="170" r="25" fill="#aa756c"/><circle cx="210" cy="170" r="20" stroke="#d6a59a"/><path d="m210 156 3 11 11 3-11 3-3 11-3-11-11-3 11-3 3-11Z" fill="#efc6b7"/></g></svg>
+              <span>{state.sealBroken ? 'Déplier la lettre' : 'Briser le sceau'} <Arrow/></span>
             </button>
             <p className="proposal-description">Quelques mots que je gardais pour toi.</p>
           </> : <>
@@ -138,13 +128,13 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
           </>}
         </section>}
 
-        {state.step === 3 && <section className="proposal-scene proposal-ring-scene" aria-label="La grande question">
-          <SceneTitle eyebrow="Chapitre III · Tous nos demains">{state.ringOpen ? <>{config.firstName},<br/><em>{config.question}</em></> : <>Et si l’on écrivait<br/><em>la suite ensemble ?</em></>}</SceneTitle>
+        {state.step === 4 && <section className="proposal-scene proposal-ring-scene" aria-label="La grande question">
+          <SceneTitle eyebrow="Chapitre IV · Tous nos demains">{state.ringOpen ? <>{config.firstName},<br/><em>{config.question}</em></> : <>Et si l’on écrivait<br/><em>la suite ensemble ?</em></>}</SceneTitle>
           <button type="button" className={`proposal-ring-button ${state.ringOpen ? 'is-open' : ''}`} onClick={() => { if (!state.ringOpen) { play('chime'); dispatch({ type: 'ring' }); } }} disabled={state.ringOpen} aria-label={state.ringOpen ? 'La bague est dévoilée' : 'Ouvrir la boîte à bague'}><RingBox open={state.ringOpen} reduced={reduced}/></button>
           {state.ringOpen ? <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reduced ? 0 : .6 }} className="proposal-ring-reveal"><p className="proposal-description">De tous les possibles, mon préféré, c’est nous.</p><button type="button" className="proposal-button" onClick={next}>Vivre ce moment <Arrow/></button></motion.div> : <><button type="button" className="proposal-text-button" onClick={() => { play('chime'); dispatch({ type: 'ring' }); }}>Ouvrir cette petite boîte <Arrow/></button><p className="proposal-small-note">Une grande question se cache à l’intérieur.</p></>}
         </section>}
 
-        {state.step === 4 && <section className="proposal-scene proposal-final" aria-label="Notre moment">
+        {state.step === 5 && <section className="proposal-scene proposal-final" aria-label="Notre moment">
           <ConfettiEffect active={state.answer === 'yes'}/>
           <div className="proposal-final-symbol" aria-hidden="true"><svg viewBox="0 0 140 110" fill="none"><circle cx="49" cy="62" r="30" stroke="currentColor" strokeWidth="2"/><circle cx="91" cy="62" r="30" stroke="currentColor" strokeWidth="2"/><path d="m70 5 2.5 9.5L82 17l-9.5 2.5L70 29l-2.5-9.5L58 17l9.5-2.5L70 5Z" fill="currentColor"/></svg></div>
           <SceneTitle eyebrow={state.answer === 'yes' ? 'Un nouveau chapitre commence' : 'Ce moment nous appartient'}>{state.answer === 'yes' ? <>À nous.<br/><em>À la vie.</em></> : state.answer === 'time' ? <>Tout le temps<br/><em>qu’il te faut.</em></> : state.answer === 'no' ? <>Merci pour<br/><em>ta sincérité.</em></> : <>Une question.<br/><em>Ton cœur.</em></>}</SceneTitle>

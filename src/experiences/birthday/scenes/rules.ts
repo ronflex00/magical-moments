@@ -12,8 +12,12 @@ export function getGiftGoal(requested: number): number {
 }
 
 export function balloonsUnlocked(popped: readonly number[], goal: number): boolean {
-  return new Set(popped).size >= getBalloonGoal(goal);
+  return new Set(popped.filter(id => isLuckyBalloon(id, goal))).size >= getBalloonGoal(goal);
 }
+
+export function isLuckyBalloon(id: number, goal: number): boolean { return Number.isInteger(id) && id >= 0 && id < getBalloonGoal(goal); }
+export function collectStar(found: number[], id: number): number[] { return Number.isInteger(id) && id >= 0 && id < 3 && !found.includes(id) ? [...found, id] : found; }
+export function starsUnlocked(found: readonly number[]): boolean { return [0, 1, 2].every(id => found.includes(id)); }
 
 export function candlesReady(lit: readonly number[], count: number): boolean {
   return new Set(lit).size >= getCandleCount(count);

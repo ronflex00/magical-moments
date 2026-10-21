@@ -40,6 +40,7 @@ export interface PartyConfig extends CreationBase {
   dressCode?: string;
   message: string;
   rsvp: { email?: string; whatsapp?: string };
+  puzzleCode?: string;
   colors: { background: string; accent: string; secondary: string };
 }
 export type CreationConfig = BirthdayConfig | ProposalConfig | PartyConfig;

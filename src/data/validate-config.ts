@@ -103,6 +103,7 @@ export function validateCreation(config: CreationConfig): void {
   }
 
   if (data.type === 'party') {
+    if (data.puzzleCode !== undefined && (typeof data.puzzleCode !== 'string' || !/^\d{3}$/.test(data.puzzleCode))) throw new Error('puzzleCode doit comporter exactement trois chiffres.');
     for (const key of ['name', 'organizer', 'address', 'message']) text(data[key], key);
     if (data.dressCode !== undefined && typeof data.dressCode !== 'string') throw new Error('dressCode doit être un texte ou être omis.');
     const date = text(data.date, 'date');

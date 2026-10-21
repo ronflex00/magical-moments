@@ -1,0 +1,32 @@
+/* Vocabulaire commun : papier, souffle, profondeur. Les mondes gardent leurs styles. */
+[data-motion-active="false"] [data-ambient],
+[data-motion-active="false"] [data-ambient] *{animation-play-state:paused!important}
+.is-motion-paused [data-ambient],.is-motion-paused [data-ambient] *{animation-play-state:paused!important}
+html[data-motion-paused="true"] [data-ambient],html[data-motion-paused="true"] [data-ambient] *{animation-play-state:paused!important}
+[data-ambient]{animation:moment-drift var(--float-duration,6s) ease-in-out var(--float-delay,0s) infinite alternate}
+html[data-motion-quality="gentle"] .confetti-effect i:nth-child(n+17),html[data-motion-quality="gentle"] .proposal-sky i:nth-child(n+15){display:none}
+@keyframes moment-drift{from{translate:0 0;rotate:var(--float-start,-1deg)}to{translate:0 var(--float-y,-8px);rotate:var(--float-end,1deg)}}
+.moment-burst{position:absolute;inset:0;display:block;pointer-events:none;z-index:6;--burst-color:#c86764}
+.burst-gold{--burst-color:#edd19b}.burst-disco{--burst-color:#f9df69}
+.moment-burst i{position:absolute;top:48%;left:50%;width:6px;height:11px;border-radius:2px;background:var(--burst-color);color:var(--burst-color);font:22px/1 Georgia,serif;animation:moment-burst .85s var(--delay) cubic-bezier(.16,.65,.35,1) both;--travel:var(--distance)}
+.moment-burst i:nth-child(3n){background:transparent;width:18px;height:18px}
+.moment-burst i:nth-child(even){--burst-color:#dcb96e}
+@keyframes moment-burst{0%{opacity:0;transform:rotate(var(--angle)) translateY(0) scale(.3)}15%{opacity:1}100%{opacity:0;transform:rotate(var(--angle)) translateY(calc(var(--travel)*-1)) rotate(110deg) scale(.7)}}
+.experience-tools .experience-back{font-size:18px;padding-inline:13px}
+.experience-back:disabled{opacity:.35}
+.scene-transition{perspective:1200px}
+.experience-progress li[aria-current="step"] .progress-dot{box-shadow:0 0 0 4px color-mix(in srgb,currentColor 12%,transparent);transition:box-shadow .3s}
+.experience-shell button:active:not(:disabled){scale:.97}
+.experience-shell button{transition:scale .16s,background-color .2s}
+.memory-gallery{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:20px 12px 30px;margin:20px auto;max-width:720px;width:100%;overscroll-behavior-inline:contain}
+.memory-gallery figure{flex:0 0 210px;scroll-snap-align:center;background:#fff9ef;color:#634354;padding:9px 9px 18px;box-shadow:0 7px 18px #34252a16;rotate:-3deg;margin:0;animation:paper-in .6s both}
+.memory-gallery figure:nth-child(even){rotate:3deg}.memory-gallery img{height:160px;width:100%;object-fit:cover}.memory-gallery figcaption{font:italic 15px var(--font-display);margin-top:13px}
+@keyframes paper-in{from{opacity:0;translate:0 22px;rotate:0deg}to{opacity:1;translate:0 0}}
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:world-out .22s ease both}
+::view-transition-new(root){animation:world-in .4s ease both}
+@keyframes world-out{to{opacity:0;transform:translateY(-10px)}}
+@keyframes world-in{from{opacity:0;transform:translateY(15px)}}
+@media(max-width:1100px){.experience-progress .progress-name{display:none}}
+@media(max-width:600px){.moment-burst i:nth-child(n+9){display:none}.memory-gallery figure{flex-basis:180px}.memory-gallery img{height:140px}.experience-progress ol{gap:7px}.experience-label{max-width:155px;letter-spacing:.04em}.experience-topbar{flex-wrap:wrap;padding-block:12px;gap:10px}.experience-home{font-size:16px}.experience-tools{margin-left:auto;gap:5px}.experience-tools button{min-width:39px;padding:8px;min-height:44px}.experience-tools .experience-back{padding:8px}}
+@media(prefers-reduced-motion:reduce){[data-ambient]{animation:none!important}.moment-burst{display:none}::view-transition-old(root),::view-transition-new(root){animation:none!important}}

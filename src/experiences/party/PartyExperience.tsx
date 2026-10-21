@@ -4,8 +4,13 @@ import { ExperienceShell, SceneTransition, ConfettiEffect } from '../../componen
 import { useSound } from '../../lib/audio/useSound';
 import { canUnlockParty, discoverClue, formatPartyDate, getRsvpLinks, isClue, nextClueHint, type ClueId, type RoomObjectId } from './party-game';
 import './party.css';
+import './party-immersion.css';
+import { ClueWorkbench } from './scenes/ClueWorkbench';
+import { PartyLock } from './scenes/PartyLock';
+import { cluesAssembled, getPartyCode, type ClueSlots } from './scenes/party-puzzles';
+import { tactileFeedback } from '../../lib/animation/settings';
 
-const steps = ['La mission', 'Les indices', 'L’invitation', 'La soirée'];
+const steps = ['La mission', 'Les indices', 'Le ticket', 'Le code', 'L’invitation', 'La soirée'];
 const objectLabels: Record<RoomObjectId, string> = {
   disco: 'Examiner la boule disco', record: 'Examiner le vinyle', photo: 'Examiner la photo sur le canapé',
   plant: 'Examiner la plante', drink: 'Examiner le cocktail', speaker: 'Examiner l’enceinte',
@@ -30,7 +35,7 @@ function DiscoBall({ className = '' }: { className?: string }) {
 }
 
 function SecretTicket({ organizer }: { organizer: string }) {
-  return <div className="party-ticket-wrap" aria-hidden="true">
+  return <div className="party-ticket-wrap" aria-hidden="true" data-ambient>
     <Star className="party-ticket-star" />
     <div className="party-ticket">
       <div className="party-ticket-top"><span>ENTRÉE TRÈS PRIVÉE</span><span>№ 001</span></div>
@@ -109,6 +114,10 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
   const [found, setFound] = useState<ClueId[]>([]);
   const [feedback, setFeedback] = useState('La pièce cache trois indices. À vous de jouer.');
   const [hinted, setHinted] = useState<ClueId | null>(null);
+  const [slots, setSlots] = useState<ClueSlots>([null, null, null]);
+  const [enteredCode, setEnteredCode] = useState('');
+  const [codeUnlocked, setCodeUnlocked] = useState(false);
+  const code = getPartyCode(config);
   const sound = useSound(config.audio);
   const rsvpLinks = useMemo(() => getRsvpLinks(config), [config]);
   const unlocked = canUnlockParty(found);
@@ -117,17 +126,21 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
 
   function replay() {
     setScene(0);
+    setSlots([null, null, null]); setEnteredCode(''); setCodeUnlocked(false);
     setFound([]);
     setHinted(null);
     setFeedback('La pièce cache trois indices. À vous de jouer.');
   }
 
   function advance() {
+    if ((scene === 1 && !unlocked) || (scene === 2 && !cluesAssembled(slots)) || (scene === 3 && !codeUnlocked)) return;
+    tactileFeedback();
     sound.play(scene === 1 || scene === 2 ? 'celebrate' : 'pop');
-    setScene((current) => Math.min(3, current + 1));
+    setScene(Math.min(5, scene + 1));
   }
 
   function inspect(id: RoomObjectId) {
+    tactileFeedback();
     if (isClue(id)) {
       if (found.includes(id)) {
         setFeedback('Cet indice est déjà dans votre poche. Inspectez un autre objet !');
@@ -142,7 +155,7 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
         record: `Un vinyle, un rendez-vous : la musique démarre à ${config.time.replace(':', ' h ')}.`,
         photo: 'Bien vu ! Au dos de la photo, vous trouvez le lieu de la soirée.',
       };
-      setFeedback(canUnlockParty(nextFound) ? 'Les trois indices sont réunis. Votre invitation est débloquée !' : messages[id]);
+      setFeedback(canUnlockParty(nextFound) ? 'Les trois indices sont réunis. Il reste à reconstituer le ticket secret !' : messages[id]);
     } else {
       sound.play('pop');
       const messages = {
@@ -160,8 +173,8 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
   }
 
   return <div className="party-experience" style={style}>
-    <ExperienceShell theme="party" label="LA SOIRÉE SECRÈTE" step={scene} steps={steps} onReplay={replay} sound={sound.enabled} onToggleSound={sound.toggle}>
-      <ConfettiEffect active={scene === 3} />
+    <ExperienceShell theme="party" label="LA SOIRÉE SECRÈTE" step={scene} steps={steps} onReplay={replay} onBack={() => setScene(value => Math.max(0, value - 1))} sound={sound.enabled} onToggleSound={sound.toggle}>
+      <ConfettiEffect active={scene === 5} />
       <SceneTransition sceneKey={scene}>
         {scene === 0 && <section className="party-intro party-scene" aria-labelledby="party-intro-title">
           <div className="party-intro-copy">
@@ -169,7 +182,7 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
             <h1 id="party-intro-title">Il se prépare<br />quelque chose<br /><em>de grand.</em><Star /></h1>
             <p>Une invitation vous attend. Mais d’abord, il va falloir jouer les détectives.</p>
             <button className="party-button" type="button" onClick={advance}>Accepter la mission <Arrow /></button>
-            <span className="party-small-note">3 indices · 2 minutes · 1 soirée mémorable</span>
+            <span className="party-small-note">3 indices · 1 code · à votre rythme</span>
           </div>
           <SecretTicket organizer={config.organizer} />
           <div className="party-scene-footer"><span>VOTRE CURIOSITÉ EST VOTRE MEILLEUR ATOUT.</span><span>INSÉRER UN PEU DE FOLIE ↗</span></div>
@@ -185,17 +198,33 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
             </aside>
           </div>
           <div className={`party-feedback${unlocked ? ' is-complete' : ''}`} role="status" aria-live="polite" aria-atomic="true"><span aria-hidden="true">{unlocked ? '✓' : '↳'}</span>{feedback}</div>
-          <div className="party-game-actions"><button className="party-text-button" type="button" onClick={showHint} disabled={unlocked}>Un petit indice ? <span aria-hidden="true">✳</span></button><button className="party-button" type="button" onClick={() => { if (unlocked) advance(); }} disabled={!unlocked}>{unlocked ? 'Ouvrir l’invitation' : 'Trouvez les 3 indices'} <Arrow /></button></div>
+          <div className="party-game-actions"><button className="party-text-button" type="button" onClick={showHint} disabled={unlocked}>Un petit indice ? <span aria-hidden="true">✳</span></button><button className="party-button" type="button" onClick={() => { if (unlocked) advance(); }} disabled={!unlocked}>{unlocked ? 'Assembler les indices' : 'Trouvez les 3 indices'} <Arrow /></button></div>
         </section>}
 
-        {scene === 2 && <section className="party-reveal party-scene" aria-labelledby="party-invitation-title">
+        {scene === 2 && <section className="party-scene party-puzzle-scene" aria-labelledby="party-workbench-title">
+          <span className="party-eyebrow">LE BUREAU DES BELLES SOIRÉES</span>
+          <h1 id="party-workbench-title">Les bonnes pièces.<br/><em>Le bon ordre.</em></h1>
+          <p className="party-puzzle-description">Votre carnet cache un ticket déchiré. Remettez la date, l’heure et le lieu à leur place pour révéler les trois chiffres du code.</p>
+          <ClueWorkbench config={config} slots={slots} code={code} onPlace={nextSlots => { setSlots(nextSlots); sound.play('chime'); tactileFeedback(); }}/>
+          <button type="button" className="party-button party-puzzle-next" disabled={!cluesAssembled(slots)} onClick={advance}>Essayer le code secret <Arrow/></button>
+        </section>}
+
+        {scene === 3 && <section className="party-scene party-puzzle-scene" aria-labelledby="party-lock-title">
+          <span className="party-eyebrow">PLUS QU’UN PETIT CLIC</span>
+          <h1 id="party-lock-title">Entrez le code.<br/><em>Sortez les paillettes.</em></h1>
+          <p className="party-puzzle-description">Les chiffres de votre ticket ouvrent la porte. À vous de composer le début d’une belle soirée.</p>
+          <PartyLock code={code} value={enteredCode} onChange={setEnteredCode} unlocked={codeUnlocked} onUnlock={() => { setCodeUnlocked(true); sound.play('celebrate'); tactileFeedback(); }}/>
+          {codeUnlocked && <button type="button" className="party-button" onClick={advance}>Ouvrir l’invitation <Arrow/></button>}
+        </section>}
+
+        {scene === 4 && <section className="party-reveal party-scene" aria-labelledby="party-invitation-title">
           <div className="party-reveal-aside"><span className="party-eyebrow">MISSION ACCOMPLIE</span><h1>Vous avez<br />le sens<br /><em>de la fête.</em></h1><p>Les indices ont parlé.<br />Et vous êtes officiellement invité·e.</p><Star className="party-reveal-star" /></div>
           <article className="party-invitation"><div className="party-invitation-top"><span>UNE INVITATION DE {config.organizer}</span><DiscoBall /></div><span className="party-invitation-overline">GARDEZ VOTRE SOIRÉE POUR</span><h2 id="party-invitation-title">{config.name}</h2><InvitationDetails config={config} /><div className="party-invitation-foot"><span>VOUS + NOUS = LE BON PROGRAMME</span><Star /></div></article>
           <div className="party-reveal-action"><button className="party-button" type="button" onClick={advance}>Passer en mode fête <Arrow /></button></div>
         </section>}
 
-        {scene === 3 && <section className="party-finale party-scene" aria-labelledby="party-finale-title">
-          <div className="party-finale-orbit" aria-hidden="true"><span>LA PISTE EST À VOUS</span><DiscoBall /><Star /></div>
+        {scene === 5 && <section className="party-finale party-scene is-party-lit" aria-labelledby="party-finale-title">
+          <div className="party-finale-orbit" aria-hidden="true" data-ambient><span>LA PISTE EST À VOUS</span><DiscoBall /><Star /></div>
           <span className="party-eyebrow">FIN DE L’ENQUÊTE. DÉBUT DE LA SOIRÉE.</span><h1 id="party-finale-title">On vous garde<br /><em>une place ?</em></h1><p className="party-finale-message">{config.message}</p>
           <div className="party-finale-summary"><strong>{config.name}</strong><span>{dateLabel} · {config.time.replace(':', ' h ')}</span></div>
           <div className="party-finale-actions">

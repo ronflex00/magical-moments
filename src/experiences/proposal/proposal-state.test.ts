@@ -1,53 +1,58 @@
 import { describe, expect, it } from 'vitest';
 import { initialProposalState, proposalReducer, type ProposalState } from './scenes/proposal-state';
-
 const next = (state: ProposalState) => proposalReducer(state, { type: 'next' });
-describe('The Big Question : progression et liberté de réponse', () => {
-  it('ne quitte le ciel des souvenirs que lorsque trois étoiles distinctes ont été découvertes', () => {
-    let state = next(initialProposalState);
-    expect(state.step).toBe(1);
+function memoriesCollected() {
+  let state = next(initialProposalState);
+  for (const index of [0,1,2]) state = proposalReducer(state,{type:'memory',index});
+  return next(state);
+}
+describe('La grande question : histoire, constellation et liberté de réponse', () => {
+  it('requiert trois souvenirs distincts avant de réunir les étoiles', () => {
+    let state=next(initialProposalState);
+    for(const index of [0,0,1]) state=proposalReducer(state,{type:'memory',index});
+    expect(state.memories).toEqual([0,1]);
     expect(next(state).step).toBe(1);
-    state = proposalReducer(state, { type: 'memory', index: 0 });
-    state = proposalReducer(state, { type: 'memory', index: 0 });
-    state = proposalReducer(state, { type: 'memory', index: 1 });
-    expect(state.memories).toEqual([0, 1]);
-    expect(next(state).step).toBe(1);
-    state = proposalReducer(state, { type: 'memory', index: 2 });
+    state=proposalReducer(state,{type:'memory',index:2});
     expect(next(state).step).toBe(2);
   });
-
-  it('requiert l’ouverture de la lettre puis de la boîte et propose les trois réponses', () => {
-    let state = next(initialProposalState);
-    for (const index of [0, 1, 2]) state = proposalReducer(state, { type: 'memory', index });
-    state = next(state);
+  it('ne trace la constellation que dans l’ordre et sans saut ni doublon', () => {
+    let state=memoriesCollected();
+    expect(proposalReducer(state,{type:'connect',index:2})).toBe(state);
     expect(next(state).step).toBe(2);
-    state = proposalReducer(state, { type: 'letter' });
-    state = next(state);
-    expect(state.step).toBe(3);
+    for(const index of [0,1,2,3,4]) {
+      state=proposalReducer(state,{type:'connect',index});
+      if(index<4) expect(next(state).step).toBe(2);
+    }
+    expect(state.constellation).toEqual([0,1,2,3,4]);
+    expect(proposalReducer(state,{type:'connect',index:4})).toBe(state);
     expect(next(state).step).toBe(3);
-    state = proposalReducer(state, { type: 'ring' });
-    state = next(state);
+  });
+  it('requiert de briser le sceau, déplier la lettre puis ouvrir la bague', () => {
+    let state:ProposalState={...memoriesCollected(),step:3,constellation:[0,1,2,3,4]};
+    expect(proposalReducer(state,{type:'letter'})).toBe(state);
+    state=proposalReducer(state,{type:'seal'});
+    expect(next(state).step).toBe(3);
+    state=next(proposalReducer(state,{type:'letter'}));
     expect(state.step).toBe(4);
-    for (const answer of ['yes', 'time', 'no'] as const) {
-      const answered = proposalReducer(state, { type: 'answer', answer });
+    expect(next(state).step).toBe(4);
+    state=next(proposalReducer(state,{type:'ring'}));
+    expect(state.step).toBe(5);
+    for(const answer of ['yes','time','no'] as const){
+      const answered=proposalReducer(state,{type:'answer',answer});
       expect(answered.answer).toBe(answer);
-      expect(answered.step).toBe(4);
-      expect(next(answered).step).toBe(4);
-      expect(proposalReducer(answered, { type: 'answer', answer: null }).answer).toBeNull();
+      expect(next(answered).step).toBe(5);
+      expect(proposalReducer(answered,{type:'answer',answer:null}).answer).toBeNull();
     }
   });
-
-  it('ignore les découvertes invalides et les actions hors de leur scène', () => {
-    expect(proposalReducer(initialProposalState, { type: 'memory', index: 0 })).toBe(initialProposalState);
-    expect(proposalReducer(initialProposalState, { type: 'answer', answer: 'yes' })).toBe(initialProposalState);
-    expect(proposalReducer(initialProposalState, { type: 'ring' })).toBe(initialProposalState);
-    const playing = next(initialProposalState);
-    for (const index of [-1, 3, .5, NaN]) expect(proposalReducer(playing, { type: 'memory', index })).toBe(playing);
+  it('ignore les interactions hors scène et les indices invalides', () => {
+    for(const action of [{type:'memory',index:0},{type:'connect',index:0},{type:'ring'},{type:'seal'},{type:'answer',answer:'yes'}] as const) expect(proposalReducer(initialProposalState,action)).toBe(initialProposalState);
+    const state=next(initialProposalState);
+    for(const index of [-1,3,.5,NaN]) expect(proposalReducer(state,{type:'memory',index})).toBe(state);
   });
-
-  it('rejoue sans conserver les souvenirs ni la réponse précédente', () => {
-    const played: ProposalState = { step: 4, memories: [0, 1, 2], selectedMemory: 2, ringOpen: true, letterOpen: true, answer: 'no' };
-    expect(proposalReducer(played, { type: 'replay' })).toEqual(initialProposalState);
-    expect(initialProposalState.memories).toEqual([]);
+  it('conserve les découvertes au retour arrière et remet tout à zéro au replay', () => {
+    const state=memoriesCollected();
+    expect(proposalReducer(state,{type:'back'})).toMatchObject({step:1,memories:[0,1,2]});
+    expect(proposalReducer(initialProposalState,{type:'back'})).toBe(initialProposalState);
+    expect(proposalReducer({...state,answer:'no',ringOpen:true,sealBroken:true},{type:'replay'})).toEqual(initialProposalState);
   });
 });

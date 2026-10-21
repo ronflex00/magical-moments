@@ -1,52 +1,55 @@
-# Validation du MVP — 20 octobre 2026
+# Validation de l’évolution immersive — 21 octobre 2026
 
-Projet exécuté localement sous Windows, avec le runtime Node 24.22.0 installé dans le projet. La synchronisation GitHub est distincte du déploiement du site. Aucune mise en ligne du site ni aucun envoi de message externe n’a été effectué lors de cette validation.
+Projet exécuté localement sous Windows, avec le runtime Node 24.22.0 installé dans le projet. L’architecture Astro/React, les configurations et la direction artistique existantes sont conservées. Les contrôles ont été réalisés sur le build local, sans déploiement du site.
 
 ## Application réalisée
 
 | Route | Parcours |
 | --- | --- |
-| `/` | Catalogue illustré, cadeau caché, menu mobile, explication, personnalisation, contact conditionnel |
-| `/demo/anniversaire` | Introduction → ballons → bougies à allumer puis souffler → cadeau à ouvrir → message et replay |
-| `/demo/mariage` | Introduction → trois souvenirs → lettre → boîte et bague → trois réponses libres et replay |
-| `/demo/evenement` | Mission → enquête à six objets dont trois indices → invitation → fête, adresse et RSVP configurable |
+| `/` | Entrée chorégraphiée, profondeur au pointeur/scroll, cadeau en plusieurs couches, cartes animées, personnalisation locale et pause des ambiances |
+| `/demo/anniversaire` | Introduction → bons ballons et leurres → jardin aux trois étoiles → bougies à allumer puis souffler → cadeau → galerie et message final |
+| `/demo/mariage` | Introduction → trois souvenirs → constellation à tracer → sceau et lettre à déplier → boîte à bague en CSS 3D → réponses libres |
+| `/demo/evenement` | Mission → enquête à six objets → indices à assembler → code à saisir → invitation → fête, adresse et RSVP configurable |
 | `/creation/anniversaire-louise` | Création fictive générée depuis un fichier local, avec `noindex` |
 
-Illustrations SVG originales, polices locales avec licences, trois identités indépendantes, configurations typées et validées au build, effets sonores facultatifs et musique locale optionnelle. Les commandes des jeux fonctionnent au clavier et au toucher. Aucune progression n’attend la fin d’une animation pour être débloquée.
+Illustrations SVG originales, polices locales avec licences, trois identités indépendantes, configurations typées et validées au build, effets sonores facultatifs et musique locale optionnelle. Les gestes de tracé et de manipulation ont des alternatives au clavier et par touches successives. Les six chapitres de chaque aventure n’imposent aucune attente artificielle. Le retour arrière conserve les découvertes et le replay les efface.
 
 ## Vérifications exécutées
 
 | Vérification | Résultat |
 | --- | --- |
-| Installation npm et résolution des dépendances | Réussies ; lockfile conservé |
+| Bibliothèques | Aucune nouvelle dépendance ajoutée pour l’immersion |
 | `npm run build` | Réussi : six pages HTML, sitemap, robots et image PNG de partage statiques |
 | Contrôle Astro/TypeScript du build | 0 erreur, 0 avertissement, 0 indication |
-| `npm test` | 91 tests réussis dans quatre fichiers |
-| Suite Playwright complète | 42 tests réussis : 21 ordinateur et 21 mobile |
-| Recontrôle après ajustements finaux de lisibilité | 30 tests marketing/responsive réussis |
-| Audits axe inclus dans Playwright | 8 écrans initiaux et 40 états internes sans violation détectée |
+| `npm test` | 98 tests réussis dans cinq fichiers |
+| Suite Playwright complète | 54 tests réussis : 27 ordinateur et 27 mobile |
+| Audits axe inclus dans Playwright | Écrans initiaux et états intermédiaires des trois aventures sans violation détectée |
 | Largeurs contrôlées | 320, 375, 390, 430, 768, 1024, 1440 px ; aucun débordement horizontal détecté |
-| Parcours et contrôles | Trois jeux complets, verrouillages, choix libres, replay, reload, liens directs, son, menu, cadeau et création personnalisée |
+| Parcours et contrôles | Trois jeux complets, erreurs de jeu, verrouillages, tracé continu souris/tactile, choix libres, retour arrière, replay, reload, liens directs, son, menu, cadeau et création personnalisée |
+| Ambiances et vitrine | Pause/reprise, suspension du hero hors écran, navigation retour, personnalisation locale et ouverture/refermeture du cadeau |
 | Animations réduites | Trois parcours terminés, confettis désactivés |
 | Console sur les parcours E2E | Aucune erreur détectée |
-| Serveur de développement | Accueil et démo HTTP 200 ; trois îlots hydratés et premières interactions vérifiées dans Chromium |
-| Prévisualisation de production | Fonctionnelle, utilisée pour les tests et captures |
-| Audit npm avec accès réseau | 0 vulnérabilité après correction des dépendances |
+| Navigation entre chapitres | Titres des nouveaux mini-jeux visibles à l’arrivée, y compris après une scène longue sur mobile |
+| Prévisualisation de production | Fonctionnelle sur le port 4323, utilisée pour les tests, captures et mesures |
+| Serveur de développement | Relancé sur le port 4321 ; quatre routes HTTP 200, hydratation et première interaction des trois jeux vérifiées sans erreur navigateur |
+| Contrôle visuel | Vitrine, jardin, constellation, boîte fermée/ouverte, assemblage d’indices et verrou sur mobile ; plusieurs scènes également sur ordinateur |
 
-Le sandbox Windows bloque certains sous-processus nécessaires aux outils. Les tests et le contrôle du serveur de développement ont été exécutés avec l’autorisation correspondante. La configuration Astro finale reste standard. Lors de la génération PNG dans le sandbox, Fontconfig signale un cache système non accessible ; l’image est néanmoins produite et a été inspectée.
+Les tests mobiles utilisent une émulation iPhone dans Chromium. Ils exercent de vrais événements tactiles émulés, y compris un geste continu sur la constellation ; ils ne remplacent pas un contrôle sur un appareil physique. Les tests de largeur couvrent les écrans initiaux aux sept dimensions, et les parcours complets contrôlent aussi les débordements des scènes internes sur ordinateur et à 390 px.
 
 ## Lighthouse
 
-Mesures Lighthouse 12.8.2 sur la vitrine servie depuis le build local, dans Chromium. Résultats de laboratoire : ils ne garantissent pas les mêmes scores sur le futur hébergement et après ajout de médias.
+Mesures Lighthouse 12.8.2 sur la vitrine servie depuis le build local, dans Chromium 147. Résultats de laboratoire : ils ne garantissent pas les mêmes scores sur le futur hébergement et après ajout de médias. Le lancement CLI initial a échoué sur un interstitiel Chrome ; les mesures valides ont ensuite été réalisées avec Lighthouse connecté au Chromium lancé par Playwright. Aucun avertissement d’exécution dans ces deux rapports.
 
 | Profil | Performance | Accessibilité | Bonnes pratiques | SEO |
 | --- | ---: | ---: | ---: | ---: |
 | Mobile | 99 | 100 | 100 | 100 |
 | Ordinateur | 100 | 100 | 100 | 100 |
 
-Mobile : FCP/LCP 1,7 s, TBT 0 ms, CLS 0. Ordinateur : FCP/LCP 0,4 s, TBT 0 ms, CLS 0.
+Mobile : FCP/LCP 1,7 s, TBT 0 ms, CLS 0,003. Ordinateur : FCP/LCP 0,4 s, TBT 0 ms, CLS 0.
 
-Les rapports HTML/JSON sont disponibles localement dans `artifacts/lighthouse/`. Huit captures de présentation sont dans `artifacts/previews/`. Ces fichiers de QA sont exclus de Git. Lighthouse conserve un diagnostic non pondéré sur la correspondance des noms accessibles avec du texte décoratif dans deux illustrations cliquables ; les commandes disposent d’un nom explicite et sont testées au clavier.
+Les nouveaux rapports HTML/JSON sont `artifacts/lighthouse/immersion-mobile.report.*` et `immersion-desktop.report.*`. Les captures des nouvelles scènes sont dans `artifacts/immersion/` ; les aperçus initiaux restent dans `artifacts/previews/`. Ces fichiers de QA sont exclus de Git. Les scores mesurent la vitrine ; les expériences ont été vérifiées par leurs parcours, leurs audits axe et leurs captures, sans score Lighthouse annoncé pour chaque jeu.
+
+La fluidité sur des appareils physiques et un nombre d’images par seconde n’ont pas été mesurés. Les effets utilisent des transformations CSS, des particules limitées, des observers de visibilité et des frames JavaScript déclenchées par les événements ; aucune boucle JavaScript permanente n’est ajoutée. La cible d’exploration de trois à cinq minutes dépend du visiteur et n’a pas fait l’objet d’une étude chronométrée.
 
 ## Avant une livraison commerciale
 

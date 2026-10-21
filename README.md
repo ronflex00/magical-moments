@@ -24,10 +24,10 @@ Ouvrir l’adresse locale affichée par Astro, habituellement `http://127.0.0.1:
 
 | Route | Contenu |
 | --- | --- |
-| `/` | Vitrine, catalogue, personnalisation et contact |
-| `/demo/anniversaire` | Ballons, bougies, cadeau et message |
-| `/demo/mariage` | Souvenirs étoilés, lettre, bague et réponse libre |
-| `/demo/evenement` | Enquête disco, indices et invitation |
+| `/` | Vitrine animée, cadeau à ouvrir et refermer, catalogue, aperçu personnalisable et contact |
+| `/demo/anniversaire` | Bons ballons, jardin aux étoiles, bougies, cadeau et galerie finale |
+| `/demo/mariage` | Souvenirs, constellation à tracer, lettre scellée, boîte à bague en CSS 3D et réponse libre |
+| `/demo/evenement` | Recherche d’indices, ticket à reconstituer, code secret, invitation et fête disco |
 | `/creation/anniversaire-louise` | Exemple fictif de création personnalisée |
 
 ```sh
@@ -47,7 +47,7 @@ npm run build
 npm run test:e2e
 ```
 
-Playwright démarre automatiquement la prévisualisation sur le port 4321. Libérer ce port si un autre serveur utilise un ancien build. Les projets de test comprennent un navigateur d’ordinateur et une émulation mobile. Un Chromium existant peut être indiqué avec la variable d’environnement `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
+Playwright démarre automatiquement la prévisualisation sur le port 4323, distinct du serveur de développement sur 4321. Libérer le port 4323 si un autre serveur utilise un ancien build. Les projets de test comprennent un navigateur d’ordinateur et une émulation mobile. Un Chromium existant peut être indiqué avec la variable d’environnement `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`.
 
 Les objectifs Lighthouse sont Performance mobile, Accessibilité, Bonnes pratiques et SEO à 90 ou plus. **Ce sont des objectifs à mesurer**, sans garantie ni score annoncé dans cette documentation. Après personnalisation, vérifier aussi les vrais téléphones, le clavier, les animations réduites, les liens directs, les rechargements et les erreurs de console.
 
@@ -77,7 +77,7 @@ Les données sont séparées de la logique :
 | --- | --- |
 | `src/data/birthday-demo.ts` | Prénom, âge, message, cadeau, photos, couleurs, bougies et objectifs |
 | `src/data/proposal-demo.ts` | Deux prénoms, accueil, lettre, demande, trois souvenirs, photos et message final |
-| `src/data/party-demo.ts` | Nom, organisateur, date, heure, adresse, tenue, message et contacts RSVP |
+| `src/data/party-demo.ts` | Nom, organisateur, date, heure, adresse, tenue, code secret, message et contacts RSVP |
 | `src/data/types.ts` | Interfaces TypeScript et structure commune |
 | `src/data/validate-config.ts` | Contrôles de validité et messages d’erreur |
 
@@ -96,6 +96,8 @@ Préférer WebP ou AVIF, redimensionner et compresser les fichiers avant de les 
 Les tableaux `photos` peuvent rester vides : les scènes utilisent déjà leurs illustrations SVG originales. Ajouter des photos enrichit les souvenirs et galeries sans remplacer ces illustrations. Pour changer les dessins eux-mêmes, modifier les composants de `src/experiences/<type>/` ou les SVG de `public/`.
 
 Pour une soirée, utiliser `date: '2027-06-19'` et `time: '20:30'`. Le champ `rsvp` accepte une adresse email et/ou un numéro WhatsApp international ; laisser `{}` lorsqu’aucun contact n’est disponible. Un clic ouvre un email ou une conversation avec un message prérempli : **l’utilisateur doit encore l’envoyer**. Le site n’enregistre aucune réservation et n’annonce aucune confirmation automatique.
+
+Le champ facultatif `puzzleCode: '274'` définit les trois chiffres du jeu de soirée. Il doit contenir exactement trois chiffres ; sa valeur par défaut est `274`. Chaque indice correctement placé révèle un chiffre, puis le visiteur saisit le code au clavier ou avec le pavé tactile. Ce code est un mécanisme de jeu visible dans le navigateur.
 
 Le son est facultatif et coupé au départ. De petits effets sont synthétisés localement avec Web Audio ; les démonstrations fonctionnent sans fichier musical. Pour personnaliser la musique d’une expérience, placer votre fichier dans `public/audio/` et ajouter à sa configuration :
 
@@ -155,3 +157,23 @@ Ne publier aucune donnée sensible ou confidentielle. Obtenir l’accord des per
 Les progressions et réponses de la demande en mariage restent en mémoire dans le navigateur, sans envoi ni stockage persistant. Recharger une expérience la recommence. Les animations respectent la préférence de réduction des animations ; les commandes restent accessibles au clavier et au toucher. Les expériences nécessitent JavaScript, avec un message de repli lorsqu’il est désactivé.
 
 Le RSVP ne collecte rien sur ce site : l’envoi passe par l’application email ou WhatsApp choisie par l’invité. Il n’y a ni paiement, ni suivi commercial, ni administration client, ni modification après publication sans rebuild. Les performances et l’accessibilité doivent être revérifiées après ajout de médias et avant chaque livraison.
+
+## 9. Immersion et animations
+
+La direction artistique et les SVG existants sont conservés. Les trois aventures comportent six chapitres, avec des découvertes facultatives et aucune attente obligatoire. L’objectif créatif est une exploration de quelques minutes ; la durée réelle dépend de la lecture et des gestes du visiteur. L’indice du jardin apparaît après 14 secondes et peut aussi être demandé immédiatement.
+
+La vitrine utilise une entrée chorégraphiée, plusieurs profondeurs au pointeur et au scroll, des révélations de papier, des cartes animées et un cadeau en plusieurs couches. L’aperçu de personnalisation permet de changer le prénom, le message et la palette localement ; il ne sauvegarde pas de création. Les transitions entre pages reposent sur les View Transitions natives lorsque le navigateur les prend en charge, avec une navigation Astro normale dans les autres cas.
+
+| Élément | Responsabilité |
+| --- | --- |
+| `src/lib/animation/settings.ts` | Durées partagées, qualité réduite selon les capacités disponibles, visibilité et retour haptique facultatif |
+| `src/lib/animation/marketing.ts` | Événements de la vitrine, frames ponctuelles du pointeur/scroll, personnalisation et nettoyage |
+| `src/styles/immersion.css` | Ambiances CSS réutilisables, pause, transitions natives et galerie tactile |
+| `src/styles/marketing-motion.css` | Chorégraphie et profondeur de la vitrine |
+| `src/components/shared/ExperienceShell.tsx` | Progression, retour arrière, focus de scène, pause, son et replay |
+| `src/components/effects/ConfettiBurst.tsx` | Petites célébrations finies, allégées sur mobile |
+| `src/experiences/*/scenes/` | Mini-jeux et règles propres à chaque univers |
+
+Les ambiances CSS sont suspendues hors écran et dans un onglet masqué. Les événements, observers, frames et délais sont nettoyés au démontage ou en quittant la page. Le bouton de pause arrête les ambiances tout en conservant le feedback des interactions. `prefers-reduced-motion` supprime les mouvements décoratifs et les confettis. Les gestes ont une alternative au clavier ou par touches successives : la constellation se trace ou se touche étoile par étoile, et le ticket se reconstitue en choisissant une carte puis sa case. Le retour arrière conserve les découvertes ; le replay les efface.
+
+Aucune nouvelle bibliothèque d’animation n’a été ajoutée pour cette évolution : Motion, CSS et SVG suffisent, y compris pour la boîte à bague.

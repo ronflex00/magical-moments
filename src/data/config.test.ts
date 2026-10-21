@@ -125,4 +125,9 @@ describe('Les configurations de création', () => {
     expect(() => validateCreation({ ...partyDemo, audio: {} } as unknown as CreationConfig)).toThrow(/audio.src/);
     expect(() => validateCreation({ ...partyDemo, audio: null } as unknown as CreationConfig)).toThrow(/audio.*objet/);
   });
+  it('accepte un code de soirée configurable à trois chiffres',()=>{
+    expect(()=>validateCreation({...partyDemo,puzzleCode:'027'})).not.toThrow();
+    expect(()=>validateCreation({...partyDemo,puzzleCode:undefined})).not.toThrow();
+    for(const puzzleCode of ['27','2a4','2740','']) expect(()=>validateCreation({...partyDemo,puzzleCode})).toThrow(/puzzleCode/);
+  });
 });

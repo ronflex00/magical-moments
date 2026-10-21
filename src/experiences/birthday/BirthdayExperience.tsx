@@ -3,10 +3,14 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import type { BirthdayConfig } from '../../data/types';
 import { ExperienceShell, SceneTransition, ConfettiEffect } from '../../components/shared/ExperienceShell';
 import { useSound } from '../../lib/audio/useSound';
-import { balloonsUnlocked, candlesReady, getBalloonGoal, getCandleCount, getGiftGoal, giftUnlocked } from './scenes/rules';
+import { balloonsUnlocked, candlesReady, getBalloonGoal, getCandleCount, getGiftGoal, giftUnlocked, isLuckyBalloon, collectStar, starsUnlocked } from './scenes/rules';
 import './birthday.css';
+import './birthday-immersion.css';
+import { StarHunt } from './scenes/StarHunt';
+import { ConfettiBurst } from '../../components/effects/ConfettiBurst';
+import { tactileFeedback } from '../../lib/animation/settings';
 
-const steps = ['La surprise', 'Les ballons', 'Le vœu', 'Le cadeau', 'Pour toi'];
+const steps = ['La surprise', 'Les ballons', 'Les étoiles', 'Le vœu', 'Le cadeau', 'Pour toi'];
 const balloonColors = ['#f59cb0', '#c6b4e6', '#f6d471', '#b7d6c9', '#ffa78a', '#c1b2dd', '#f3b9cc', '#f7d990', '#b8d2d0', '#f2a78f'];
 const littleMessages = ['Une étoile pour toi !', 'Un peu de magie.', 'C’est ton jour !', 'À toi les surprises !', 'Encore un sourire.', 'Bien joué !', 'Un joli souvenir.', 'Un grand bonheur.', 'De la douceur.', 'Un dernier souhait.'];
 
@@ -33,7 +37,7 @@ function CakeArt({ candleCount = 5, lit = [], blown = false, decorative = false 
         <rect x={x - 6} y={y - 42} width="12" height="67" rx="4" fill={n % 2 ? '#b9a5d8' : '#f5b65e'} stroke="#906e77" strokeWidth="2" />
         <path d={`M${x - 5} ${y - 27}l10-7m-10 27 10-7m-10 27 10-7`} stroke="#fff7eb" strokeWidth="4" />
         <path d={`M${x} ${y - 42}v-8`} stroke="#906e77" strokeWidth="2" />
-        {isLit && !blown && <g className="bq-flame"><path d={`M${x} ${y - 80}c-17 20-15 31 0 31s17-13 0-31Z`} fill="#ffcd61" /><path d={`M${x} ${y - 68}c-8 10-7 16 0 16s8-6 0-16Z`} fill="#fff7c5" /></g>}
+        {isLit && !blown && <g className="bq-flame" data-ambient><path d={`M${x} ${y - 80}c-17 20-15 31 0 31s17-13 0-31Z`} fill="#ffcd61" /><path d={`M${x} ${y - 68}c-8 10-7 16 0 16s8-6 0-16Z`} fill="#fff7c5" /></g>}
         {blown && <path className="bq-smoke" d={`M${x} ${y - 52}c-16-14 16-19 0-34s9-17 0-25`} stroke="#bbadbf" strokeWidth="3" strokeLinecap="round" />}
       </g>;
     })}
@@ -64,7 +68,7 @@ function GiftArt({ open = false, progress = 0 }: { open?: boolean; progress?: nu
 }
 
 function BalloonArt({ color, number }: { color: string; number: number }) {
-  return <svg viewBox="0 0 100 155" fill="none" aria-hidden="true"><path d="M50 99c-14 18 13 22 0 38s-4 17-4 17" stroke="#aa8e92" strokeWidth="1.7" /><path d="m45 95-5 10h18l-5-10" fill={color} stroke="#997b86" strokeWidth="1.4" /><ellipse cx="50" cy="49" rx="38" ry="47" fill={color} stroke="#997b86" strokeWidth="1.5" /><path d="M27 24c-6 7-9 14-8 22" stroke="#fff7f0" strokeWidth="6" strokeLinecap="round" opacity=".8" /><path d="M41 58v3m18-3v3" stroke="#82535c" strokeWidth="3" strokeLinecap="round" /><path d={number % 2 ? 'M45 68c3 4 7 4 10 0' : 'M46 68c2 3 6 3 8 0'} stroke="#82535c" strokeWidth="2" strokeLinecap="round" /><ellipse cx="32" cy="65" rx="5" ry="2.5" fill="#ec788f" opacity=".6" /><ellipse cx="68" cy="65" rx="5" ry="2.5" fill="#ec788f" opacity=".6" /></svg>;
+  return <svg className="bq-balloon-art" data-ambient viewBox="0 0 100 155" fill="none" aria-hidden="true"><path d="M50 99c-14 18 13 22 0 38s-4 17-4 17" stroke="#aa8e92" strokeWidth="1.7" /><path d="m45 95-5 10h18l-5-10" fill={color} stroke="#997b86" strokeWidth="1.4" /><ellipse cx="50" cy="49" rx="38" ry="47" fill={color} stroke="#997b86" strokeWidth="1.5" /><path d="M27 24c-6 7-9 14-8 22" stroke="#fff7f0" strokeWidth="6" strokeLinecap="round" opacity=".8" /><path d="M41 58v3m18-3v3" stroke="#82535c" strokeWidth="3" strokeLinecap="round" /><path d={number % 2 ? 'M45 68c3 4 7 4 10 0' : 'M46 68c2 3 6 3 8 0'} stroke="#82535c" strokeWidth="2" strokeLinecap="round" /><ellipse cx="32" cy="65" rx="5" ry="2.5" fill="#ec788f" opacity=".6" /><ellipse cx="68" cy="65" rx="5" ry="2.5" fill="#ec788f" opacity=".6" /></svg>;
 }
 
 export default function BirthdayExperience({ config }: { config: BirthdayConfig }) {
@@ -73,6 +77,10 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
   const [lit, setLit] = useState<number[]>([]);
   const [blown, setBlown] = useState(false);
   const [giftTaps, setGiftTaps] = useState(0);
+  const [foundStars, setFoundStars] = useState<number[]>([]);
+  const [wrongBalloon, setWrongBalloon] = useState<number | null>(null);
+  const [balloonFeedback, setBalloonFeedback] = useState('Les petits soleils en forme d’étoile te montrent les bons ballons.');
+  const wishes = ['Des rires à n’en plus finir.', 'Des aventures à inventer.', 'Des jours doux, tout simplement.'];
   const hasInteracted = useRef(false);
   const focusHeading = useCallback((heading: HTMLHeadingElement | null) => {
     // Le titre reçoit le focus au montage de la nouvelle scène, après sa transition.
@@ -88,11 +96,14 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
   const giftDone = giftUnlocked(giftTaps, giftGoal);
   const balloonCount = Math.max(6, goal + 2);
 
-  const next = () => { hasInteracted.current = true; sound.play('chime'); setScene(current => Math.min(4, current + 1)); };
-  const replay = () => { hasInteracted.current = true; setPopped([]); setLit([]); setBlown(false); setGiftTaps(0); setScene(0); };
+  const next = () => { hasInteracted.current = true; sound.play('chime'); setScene(Math.min(5, scene + 1)); };
+  const replay = () => { hasInteracted.current = true; setPopped([]); setLit([]); setBlown(false); setGiftTaps(0); setFoundStars([]); setWrongBalloon(null); setBalloonFeedback('Les étoiles te montrent les bons ballons.'); setScene(0); };
   const pop = (id: number) => {
+    if (!isLuckyBalloon(id, goal)) { setWrongBalloon(id); setBalloonFeedback('Celui-ci préfère danser ! Cherche un ballon marqué d’une étoile.'); sound.play('pop'); return; }
     if (popped.includes(id)) return;
     setPopped(previous => previous.includes(id) ? previous : [...previous, id]);
+    setBalloonFeedback(littleMessages[id]);
+    tactileFeedback();
     sound.play('pop');
   };
   const light = (id: number) => {
@@ -108,7 +119,7 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
   const titleProps = { ref: focusHeading, tabIndex: -1 };
 
   return <div className="birthday-experience" style={{ '--bq-background': config.colors.background, '--bq-accent': config.colors.accent, '--bq-secondary': config.colors.secondary } as CSSProperties}>
-    <ExperienceShell theme="birthday" label="La quête d’anniversaire" step={scene} steps={steps} onReplay={replay} sound={sound.enabled} onToggleSound={sound.toggle}>
+    <ExperienceShell theme="birthday" label="La quête d’anniversaire" step={scene} steps={steps} onReplay={replay} onBack={() => setScene(value => Math.max(0, value - 1))} sound={sound.enabled} onToggleSound={sound.toggle}>
       <div className="bq-world">
         <div className="bq-paper-dots" aria-hidden="true" />
         <span className="bq-edge-note" aria-hidden="true">fabriqué avec beaucoup d’amour</span>
@@ -119,13 +130,14 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
               <h1 id="bq-title" {...titleProps}>Aujourd’hui,<br />c’est <span>ton jour,</span><br />{config.firstName}<span className="bq-title-dot">.</span></h1>
               <p className="bq-lead">Il paraît qu’une surprise t’attend…<br />Mais d’abord, un peu de magie.</p>
               <button className="bq-button" onClick={next}>Commencer ma surprise <span aria-hidden="true">↗</span></button>
-              <p className="bq-duration">5 petites étapes · plein de grands sourires</p>
+              <p className="bq-duration">6 petits chapitres · à savourer à ton rythme</p>
+              <div className="bq-intro-companion"><svg viewBox="0 0 50 50" fill="none" aria-hidden="true"><path d="m25 3 7 13 15 3-10 11 1 16-13-7-14 7 2-16L3 19l15-3Z" fill="#efce83" stroke="#b78c46"/><path d="M19 24v2m12-2v2m-10 6q4 4 8 0" stroke="#7c5d3d" strokeWidth="2" strokeLinecap="round"/></svg><span>« Je garde ton cadeau. Retrouvons d’abord les trois étoiles du bonheur ! »</span></div>
             </div>
             <div className="bq-intro-illustration">
               <div className="bq-round-backdrop" />
               <span className="bq-birthday-badge">{config.age}<small>bougies de bonheur</small></span>
               <Sparkle className="bq-sparkle bq-sparkle-one" /><Sparkle className="bq-sparkle bq-sparkle-two" /><Sparkle className="bq-sparkle bq-sparkle-three" />
-              <motion.div className="bq-floating-cake" animate={reduced ? {} : { y: [0, -9, 0], rotate: [-2, 1, -2] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}><CakeArt candleCount={5} decorative /></motion.div>
+              <div className="bq-floating-cake bq-cake-float" data-ambient><CakeArt candleCount={candleCount} decorative /></div>
               <span className="bq-handwritten" aria-hidden="true">un vœu ?<svg viewBox="0 0 90 50" fill="none" aria-hidden="true"><path d="M4 7c36-11 68 4 69 33m-11-9 11 11 10-11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
               <span className="bq-sticker">100 %<br /><strong>bonne humeur</strong></span>
             </div>
@@ -134,21 +146,30 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
           {scene === 1 && <section className="bq-scene bq-centered" aria-labelledby="bq-title">
             <p className="bq-eyebrow">01 / Une envolée de bonheur</p>
             <h1 id="bq-title" {...titleProps}>Fais éclater <span>la joie.</span></h1>
-            <p className="bq-lead">Attrape {goal} ballons. Ils cachent des petits bonheurs.</p>
+            <p className="bq-lead">Fais éclater les {goal} ballons marqués d’une étoile. Les autres sont juste là pour danser.</p>
             <div className="bq-balloon-field" aria-label="Les ballons à éclater">
               {Array.from({ length: balloonCount }, (_, id) => <div key={id} className={`bq-balloon-slot bq-slot-${id}`}>
                 <AnimatePresence initial={false} mode="wait">
-                  {popped.includes(id) ? <motion.div key="popped" className="bq-balloon-reward" initial={reduced ? false : { scale: .3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><Sparkle /><span>{littleMessages[id]}</span></motion.div>
-                    : <motion.button key="balloon" className="bq-balloon" aria-label={`Éclater le ballon ${id + 1}`} onClick={() => pop(id)} animate={reduced ? {} : { y: [0, -9, 0], rotate: [-3, 3, -3] }} transition={{ duration: 3.4 + id * .2, repeat: Infinity, delay: id * .12 }} exit={reduced ? { opacity: 0 } : { scale: 1.35, opacity: 0, transition: { duration: .13 } }} whileTap={reduced ? {} : { scale: .86 }}><BalloonArt color={balloonColors[id]} number={id} /></motion.button>}
+                  {popped.includes(id) ? <motion.div key="popped" className="bq-balloon-reward" initial={reduced ? false : { scale: .3, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><Sparkle /><span>{littleMessages[id]}</span><ConfettiBurst eventKey={1}/></motion.div>
+                    : <motion.button key="balloon" className={`bq-balloon ${wrongBalloon === id ? 'is-wrong' : ''}`} style={{ '--float-duration': `${3.4 + id * .35}s`, '--float-delay': `${id * -.4}s` } as CSSProperties} aria-label={id < goal ? `Éclater le ballon ${id + 1}` : `Toucher le ballon dansant ${id + 1}`} onClick={() => pop(id)} onAnimationEnd={() => { if(wrongBalloon === id) setWrongBalloon(null); }} exit={reduced ? { opacity: 0 } : { scale: 1.35, opacity: 0, transition: { duration: .13 } }} whileTap={reduced ? {} : { scale: .86 }}><BalloonArt color={balloonColors[id]} number={id} />{id < goal && <span className="bq-balloon-mark" aria-hidden="true">✧</span>}</motion.button>}
                 </AnimatePresence>
               </div>)}
               <span className="bq-field-doodle" aria-hidden="true">pop !</span>
             </div>
-            <div className="bq-scene-footer"><p className={`bq-counter ${balloonsDone ? 'is-complete' : ''}`} role="status" aria-live="polite"><span>{Math.min(popped.length, goal)} / {goal}</span> {balloonsDone ? 'C’est une pluie de bonheur !' : 'ballons éclatés'}</p><button className="bq-button" disabled={!balloonsDone} onClick={next}>Place au gâteau <span aria-hidden="true">→</span></button></div>
+            <p className="bq-balloon-feedback" role="status">{balloonFeedback}</p>
+            <div className="bq-scene-footer"><p className={`bq-counter ${balloonsDone ? 'is-complete' : ''}`} role="status" aria-live="polite"><span>{Math.min(popped.length, goal)} / {goal}</span> {balloonsDone ? 'C’est une pluie de bonheur !' : 'ballons éclatés'}</p><button className="bq-button" disabled={!balloonsDone} onClick={next}>Chercher les étoiles <span aria-hidden="true">→</span></button></div>
           </section>}
 
-          {scene === 2 && <section className="bq-scene bq-centered bq-cake-scene" aria-labelledby="bq-title">
-            <p className="bq-eyebrow">02 / Le moment du vœu</p>
+          {scene === 2 && <section className="bq-scene bq-centered bq-stars-scene" aria-labelledby="bq-title">
+            <p className="bq-eyebrow">02 / Le jardin des petits bonheurs</p>
+            <h1 id="bq-title" {...titleProps}>La magie se <span>cache ici.</span></h1>
+            <p className="bq-lead">Explore, soulève, cueille. Trois étoiles attendent dans ce jardin de papier.</p>
+            <StarHunt found={foundStars} messages={wishes} onFind={id => { setFoundStars(previous => collectStar(previous,id)); sound.play('chime'); tactileFeedback(); }}/>
+            <div className="bq-scene-footer"><p className="bq-counter" role="status"><span>{foundStars.length} / 3</span> étoiles cueillies</p><button className="bq-button" disabled={!starsUnlocked(foundStars)} onClick={next}>Place au gâteau <span aria-hidden="true">→</span></button></div>
+          </section>}
+
+          {scene === 3 && <section className="bq-scene bq-centered bq-cake-scene" aria-labelledby="bq-title">
+            <p className="bq-eyebrow">03 / Le moment du vœu</p>
             <h1 id="bq-title" {...titleProps}>{blown ? <>Que ton vœu <span>se réalise.</span></> : <>Un gâteau. <span>Un vœu.</span></>}</h1>
             <p className="bq-lead">{blown ? 'On croise les doigts, très très fort.' : candlesDone ? 'Ferme les yeux, fais un vœu… puis souffle !' : 'Allume chaque bougie pour préparer ton vœu.'}</p>
             <div className="bq-cake-stage"><CakeArt candleCount={candleCount} lit={lit} blown={blown} /><Sparkle className="bq-cake-star" /><span className="bq-cake-age" aria-hidden="true">{config.age}<small>ans de magie</small></span></div>
@@ -158,8 +179,8 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
             <ConfettiEffect active={blown} />
           </section>}
 
-          {scene === 3 && <section className={`bq-scene bq-centered bq-gift-scene ${giftDone ? 'bq-gift-opened' : ''}`} aria-labelledby="bq-title">
-            <p className="bq-eyebrow">03 / La surprise dans la surprise</p>
+          {scene === 4 && <section className={`bq-scene bq-centered bq-gift-scene ${giftDone ? 'bq-gift-opened' : ''}`} aria-labelledby="bq-title">
+            <p className="bq-eyebrow">04 / La surprise dans la surprise</p>
             <h1 id="bq-title" {...titleProps}>{giftDone ? <>Ça, c’est <span>pour toi.</span></> : <>Quelque chose <span>t’attend.</span></>}</h1>
             <p className="bq-lead">{giftDone ? 'Un cadeau à vivre, des souvenirs à inventer.' : `Tapote le cadeau ${giftGoal} fois pour dénouer le ruban.`}</p>
             <div className="bq-gift-stage">
@@ -169,16 +190,19 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
             <p className="bq-gift-status" role="status" aria-live="polite">{giftDone ? 'Surprise ! Ton cadeau est ouvert.' : giftTaps ? `Encore ${giftGoal - giftTaps} ${giftGoal - giftTaps > 1 ? 'petits tapotements' : 'petit tapotement'}…` : 'Le plus joli moment, c’est de l’ouvrir.'}</p>
             {!giftDone && <div className="bq-tap-progress" role="progressbar" aria-label="Ouverture du cadeau" aria-valuemin={0} aria-valuemax={giftGoal} aria-valuenow={giftTaps} aria-valuetext={`${giftTaps} sur ${giftGoal} tapotements`}>{Array.from({ length: giftGoal }, (_, id) => <span key={id} className={id < giftTaps ? 'is-done' : ''} />)}</div>}
             {giftDone && <motion.div className="bq-gift-message" initial={reduced ? false : { y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}><span className="bq-gift-label">Le bon pour un grand sourire</span><h2>{config.gift.title}</h2><p>{config.gift.description}</p></motion.div>}
-            {giftDone && config.photos.length > 0 && <div className="bq-photo-gallery" aria-label="Quelques jolis souvenirs">{config.photos.map((photo, id) => <figure key={`${photo.src}-${id}`}><img src={photo.src} alt={photo.alt} width="320" height="240" loading="lazy" />{photo.caption && <figcaption>{photo.caption}</figcaption>}</figure>)}</div>}
+
             {giftDone && <button className="bq-button" onClick={next}>Il reste un petit mot <span aria-hidden="true">→</span></button>}
             <ConfettiEffect active={giftDone} />
           </section>}
 
-          {scene === 4 && <section className="bq-scene bq-final bq-centered" aria-labelledby="bq-title">
+          {scene === 5 && <section className="bq-scene bq-final bq-centered" aria-labelledby="bq-title">
             <div className="bq-final-flower" aria-hidden="true"><svg viewBox="0 0 120 120" fill="none"><path d="M60 27C39-4 15 26 32 43 0 47 6 82 34 81c-12 30 24 44 36 17 20 25 47 0 28-20 32-9 20-42-7-36C92 11 60 7 60 27Z" fill="#f6b3c3" stroke="#c98295" strokeWidth="2" /><circle cx="61" cy="61" r="22" fill="#ffdd83" /><path d="M53 59v3m16-3v3m-13 7c3 3 7 3 10 0" stroke="#936a62" strokeWidth="2.5" strokeLinecap="round" /></svg></div>
-            <p className="bq-eyebrow">04 / Le bonheur te va si bien</p>
+            <p className="bq-eyebrow">05 / Le bonheur te va si bien</p>
             <h1 id="bq-title" {...titleProps}>Joyeux<br /><span>anniversaire,</span><br />{config.firstName}<span className="bq-title-dot"> !</span></h1>
             <div className="bq-final-message"><Sparkle /><p>{config.message}</p></div>
+            <div className="bq-adventure-gallery"><h2>Ton petit carnet de magie.</h2><div className="memory-gallery" aria-label="Les souvenirs de cette aventure">
+              {config.photos.length ? config.photos.map((photo, index) => <figure key={photo.src} style={{ animationDelay: `${index * .08}s` }}><img src={photo.src} alt={photo.alt} width="320" height="240" loading="lazy"/>{photo.caption && <figcaption>{photo.caption}</figcaption>}</figure>) : wishes.map((wish, index) => <figure key={wish} style={{ animationDelay: `${index * .08}s` }}><div className="bq-journal-art" aria-hidden="true"><Sparkle color={['#c97882','#c5a0c8','#b7b67b'][index]}/></div><figcaption>{wish}</figcaption></figure>)}
+            </div></div>
             <button className="bq-button" onClick={replay}>Revivre la surprise <span aria-hidden="true">↺</span></button>
             <p className="bq-duration">Les petits bonheurs, ça se rejoue à l’infini.</p>
             <ConfettiEffect active />

@@ -2,6 +2,65 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { siteConfig } from '../../src/site-config';
 
+test('La pause de l’ambiance conserve les interactions du cadeau',async({page})=>{
+  await page.goto('/');
+  await page.getByRole('button',{name:'Mettre les animations ambiantes en pause',exact:true}).click();
+  await expect(page.locator('.art-flower')).toHaveCSS('animation-play-state','paused');
+  await page.locator('.surprise-art').click();
+  await expect(page.locator('#hero-surprise')).toBeVisible();
+  await page.getByRole('button',{name:'Reprendre les animations ambiantes',exact:true}).click();
+  await expect(page.locator('.motion-toggle')).toHaveAttribute('aria-pressed','false');
+});
+
+test('La personnalisation locale modifie le prénom, le mot et la palette', async ({ page }) => {
+  await page.goto('/');
+  const preview=page.locator('.personal-playground');
+  await preview.getByLabel('Son prénom', {exact:true}).fill('Charlie');
+  await expect(preview.locator('.preview-name')).toHaveText('Pour Charlie.');
+  await preview.getByLabel('Votre petit mot', {exact:true}).selectOption({label:'À nous et aux jours heureux.'});
+  await expect(preview.locator('.preview-message')).toHaveText('À nous et aux jours heureux.');
+  await preview.getByRole('button',{name:'Sauge',exact:true}).click();
+  await expect(preview.getByRole('button',{name:'Sauge',exact:true})).toHaveAttribute('aria-pressed','true');
+  await expect(preview.getByRole('button',{name:'Corail',exact:true})).toHaveAttribute('aria-pressed','false');
+  await expect(preview.locator('.personal-art')).toHaveCSS('--preview-color','#71855e');
+});
+
+test('Les animations du hero sont suspendues hors écran et la navigation revient correctement', async ({ page }) => {
+  await page.goto('/');
+  const hero=page.locator('.hero-art');
+  await expect(hero).toHaveAttribute('data-motion-active','true');
+  await page.locator('#contact').scrollIntoViewIfNeeded();
+  await expect(hero).toHaveAttribute('data-motion-active','false');
+  await expect(hero.locator('.art-flower')).toHaveCSS('animation-play-state','paused');
+  await page.locator('.card-try').first().click();
+  await expect(page).toHaveURL(/\/demo\/anniversaire$/);
+  await page.goBack();
+  await page.locator('.surprise-art').scrollIntoViewIfNeeded();
+  await expect(hero).toHaveAttribute('data-motion-active','true');
+  await page.locator('.surprise-art').click();
+  await expect(page.locator('#hero-surprise')).toBeVisible();
+  await page.getByRole('button',{name:'Refermer la surprise'}).click();
+  await expect(page.locator('#hero-surprise')).toBeHidden();
+});
+
+test('Le cadeau réagit au pointeur sur ordinateur et au tap sur mobile', async ({page,isMobile})=>{
+  await page.goto('/');
+  const hero=page.locator('.hero-art');
+  const gift=page.locator('.surprise-art');
+  if(isMobile) await gift.tap();
+  else {
+    const box=await hero.boundingBox();
+    if(!box) throw new Error('Hero introuvable');
+    await page.mouse.move(box.x+box.width*.7,box.y+box.height*.3);
+    await expect.poll(()=>hero.evaluate(element=>element.style.getPropertyValue('--px'))).not.toBe('');
+    await gift.click();
+  }
+  await expect(hero).toHaveClass(/is-open/);
+  await expect(hero.locator('.gift-bow')).toHaveCSS('opacity','0');
+  await expect(hero.locator('.gift-light')).toHaveCSS('opacity','0.52');
+  await expect(hero.locator('.hero-confetti i')).not.toHaveCount(0);
+});
+
 test('Le menu mobile s’ouvre, se ferme au choix d’un lien et avec Échap', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');

@@ -1,4 +1,6 @@
 /* Contrastes des petites légendes et des surfaces interactives. */
+/* Évite qu’un lien hors écran soit peint pendant un changement de viewport. */
+.skip-link:not(:focus){clip-path:inset(100%)}
 body .button-primary{background:#b9513b}
 body .button-primary:hover{background:#a64733}
 body .hero-footnote,body .hero-art-label,body .scroll-cue,body .section-heading>p,body .section-heading>p>span,

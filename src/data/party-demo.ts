@@ -18,5 +18,6 @@ export const partyDemo: PartyConfig = {
   dressCode: 'Une touche de paillettes. Beaucoup de vous.',
   message: 'Le meilleur programme ? Vous, nous, quelques vinyles et aucune envie de rentrer tôt. La piste vous attend.',
   rsvp: {},
+  puzzleCode: '274',
   colors: { background: '#251347', accent: '#ff7947', secondary: '#f9df69' },
 };
