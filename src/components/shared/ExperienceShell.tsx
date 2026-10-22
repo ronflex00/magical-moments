@@ -7,6 +7,7 @@ import './experience-shell.css';
 import './immersive-v3.css';
 import { AudioMixer, type MixerState } from './AudioMixer';
 import { AmbientWorld } from '../effects/AmbientWorld';
+import { GestureDebug } from '../gestures/GestureDebug';
 
 interface ShellProps {
   theme: 'birthday' | 'proposal' | 'party';
@@ -34,6 +35,7 @@ export function ExperienceShell({ theme, label, step, steps, onReplay, sound, on
   return <MotionConfig reducedMotion="user">
     <div ref={scope} data-audio-status={audioControl?.status} className={`experience-shell theme-${theme} ${paused ? 'is-motion-paused' : ''}`}>
       <AmbientWorld theme={theme}/>
+      <GestureDebug/>
       <header className="experience-topbar">
         <a href={withBase('/')} className="experience-home" aria-label={`Retour à ${siteConfig.name}`}><span aria-hidden="true">✳</span> {siteConfig.name}</a>
         <div className="experience-tools">

@@ -1,4 +1,5 @@
 import { appPath } from './paths';
+import { stroke } from './input';
 import { expect, test, type Page, type Locator } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { birthdayDemo } from '../../src/data/birthday-demo';
@@ -242,7 +243,8 @@ test('Birthday Quest : ballons, bougies, cadeau, message et replay', async ({ pa
   const sound = page.getByRole('button', { name: 'Activer le son', exact: true });
   await expect(sound).toHaveAttribute('aria-pressed', 'false');
   await activate(sound);
-  await expect(page.getByRole('button', { name: 'Désactiver le son' })).toHaveAttribute('aria-pressed', 'true');
+  if(await page.evaluate(()=>typeof AudioContext==='function'))await expect(page.getByRole('button', { name: 'Désactiver le son' })).toHaveAttribute('aria-pressed', 'true');
+  else await expect(page.getByRole('button',{name:'Réessayer le son ♫',exact:true})).toBeVisible();
   await playBirthday(page);
   await activate(page.getByRole('button', { name: 'Revivre la surprise' }));
   await expect(page.getByRole('button', { name: 'Commencer ma surprise' })).toBeVisible();
@@ -321,17 +323,7 @@ test('Le fil étoilé se trace avec un vrai geste continu',async({page,isMobile}
     if(!rect) throw new Error('Étoile introuvable');
     points.push({x:rect.x+rect.width/2,y:rect.y+rect.height/2});
   }
-  if(isMobile){
-    const client=await page.context().newCDPSession(page);
-    await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[points[0]]});
-    for(const point of points.slice(1)) await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[point]});
-    await client.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-    await client.detach();
-  }else{
-    await page.mouse.move(points[0].x,points[0].y);await page.mouse.down();
-    for(const point of points.slice(1)) await page.mouse.move(point.x,point.y,{steps:5});
-    await page.mouse.up();
-  }
+  await stroke(page,points,isMobile);
   await expect(page.getByRole('button',{name:'Découvrir la lettre',exact:true})).toBeEnabled();
 });
 

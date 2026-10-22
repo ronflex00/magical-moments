@@ -1,22 +1,34 @@
-import {
-  useEffect,
-  useRef,
-  type CSSProperties,
-  type PointerEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { observeContact, type Contact, type GestureAxis } from "./contact";
+import { reportGesture } from "./GestureDebug";
+export { gestureIntent } from "./contact";
+export type { GestureAxis } from "./contact";
 
-export type GestureAxis = "x" | "y" | "both";
-export function gestureIntent(
-  dx: number,
-  dy: number,
+export function gestureThreshold(
+  width: number,
+  height: number,
   axis: GestureAxis,
-): "wait" | "accept" | "scroll" {
-  if (Math.hypot(dx, dy) < 8) return "wait";
-  if (axis === "x" && Math.abs(dy) > Math.abs(dx) * 1.15) return "scroll";
-  if (axis === "y" && Math.abs(dx) > Math.abs(dy) * 1.6) return "scroll";
-  return "accept";
+  maximum: number,
+) {
+  const size =
+    axis === "x" ? width : axis === "y" ? height : Math.min(width, height);
+  return Math.max(18, Math.min(maximum, size * 0.28));
 }
+type Props = {
+  children: ReactNode;
+  axis?: GestureAxis;
+  direction?: number;
+  threshold?: number;
+  onCommit?: (direction: number) => void;
+  onDrop?: (x: number, y: number) => boolean | void;
+  onStart?: () => void;
+  onDrag?: (point: { x: number; y: number } | null) => boolean | void;
+  onHold?: () => void;
+  holdMs?: number;
+  disabled?: boolean;
+  className?: string;
+  style?: CSSProperties;
+};
 export function GestureSurface({
   children,
   axis = "x",
@@ -24,190 +36,238 @@ export function GestureSurface({
   threshold = 64,
   onCommit,
   onDrop,
+  onStart,
+  onDrag,
   onHold,
   holdMs = 750,
   disabled = false,
   className = "",
   style,
-}: {
-  children: ReactNode;
-  axis?: GestureAxis;
-  direction?: number;
-  threshold?: number;
-  onCommit?: (direction: number) => void;
-  onDrop?: (x: number, y: number) => void;
-  onHold?: () => void;
-  holdMs?: number;
-  disabled?: boolean;
-  className?: string;
-  style?: CSSProperties;
-}) {
-  const active = useRef<{
-    id: number;
-    x: number;
-    y: number;
-    dx: number;
-    dy: number;
-    locked: boolean;
-    consumed: boolean;
-    start: number;
-  } | null>(null);
-  const frame = useRef(0),
-    hold = useRef(0),
-    suppress = useRef(false);
-  const options = useRef({ onCommit, onDrop, onHold });
-  options.current = { onCommit, onDrop, onHold };
+}: Props) {
   const node = useRef<HTMLDivElement>(null);
-  useEffect(
-    () => () => {
-      cancelAnimationFrame(frame.current);
-      cancelAnimationFrame(hold.current);
-      active.current = null;
-    },
-    [],
-  );
-  function reset() {
-    cancelAnimationFrame(frame.current);
-    cancelAnimationFrame(hold.current);
-    if (node.current) {
-      node.current.dataset.dragging = "false";
-      node.current.style.setProperty("--drag-x", "0px");
-      node.current.style.setProperty("--drag-y", "0px");
-      node.current.style.setProperty("--gesture-progress", "0");
-      node.current.style.setProperty("--hold-progress", "0");
+  const options = useRef({
+    axis,
+    direction,
+    threshold,
+    onCommit,
+    onDrop,
+    onStart,
+    onDrag,
+    onHold,
+    holdMs,
+    disabled,
+  });
+  options.current = {
+    axis,
+    direction,
+    threshold,
+    onCommit,
+    onDrop,
+    onStart,
+    onDrag,
+    onHold,
+    holdMs,
+    disabled,
+  };
+  useEffect(() => {
+    const element = node.current;
+    if (!element) return;
+    let frame = 0,
+      hold = 0,
+      resultTimer = 0,
+      started = 0,
+      limit = 64;
+    let held = false,
+      scrollX = 0,
+      scrollY = 0;
+    function reset() {
+      cancelAnimationFrame(frame);
+      cancelAnimationFrame(hold);
+      element!.dataset.dragging = "false";
+      element!.dataset.holding = "false";
+      for (const [key, value] of Object.entries({
+        "--drag-x": "0px",
+        "--drag-y": "0px",
+        "--drag-rotation": "0deg",
+        "--drag-flip": "0deg",
+        "--pull-y": "0px",
+        "--gesture-progress": "0",
+        "--hold-progress": "0",
+      }))
+        element!.style.setProperty(key, value);
+      options.current.onDrag?.(null);
     }
-  }
-  function down(event: PointerEvent<HTMLDivElement>) {
-    if (
-      disabled ||
-      active.current ||
-      (event.pointerType === "mouse" && event.button !== 0)
-    )
-      return;
-    suppress.current = false;
-    active.current = {
-      id: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
-      dx: 0,
-      dy: 0,
-      locked: false,
-      consumed: false,
-      start: performance.now(),
-    };
-    if (onHold) {
-      const tick = () => {
-        const a = active.current;
-        if (!a || a.locked) return;
-        const progress = Math.min(1, (performance.now() - a.start) / holdMs);
-        node.current?.style.setProperty("--hold-progress", String(progress));
-        if (progress >= 1) {
-          a.consumed = true;
-          suppress.current = true;
-          options.current.onHold?.();
-        } else hold.current = requestAnimationFrame(tick);
-      };
-      hold.current = requestAnimationFrame(tick);
+    function result(value: string) {
+      element!.dataset.gestureResult = value;
+      clearTimeout(resultTimer);
+      resultTimer = window.setTimeout(() => {
+        delete element!.dataset.gestureResult;
+      }, 450);
     }
-  }
-  function move(event: PointerEvent<HTMLDivElement>) {
-    const a = active.current;
-    if (!a || a.id !== event.pointerId) return;
-    a.dx = event.clientX - a.x;
-    a.dy = event.clientY - a.y;
-    const intent = gestureIntent(a.dx, a.dy, axis);
-    if (intent === "wait") return;
-    cancelAnimationFrame(hold.current);
-    if (intent === "scroll" && !a.locked) {
-      active.current = null;
-      reset();
-      return;
-    }
-    if (!a.locked) {
-      a.locked = true;
-      event.currentTarget.setPointerCapture(event.pointerId);
-    }
-    suppress.current = true;
-    cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => {
-      const n = node.current;
-      if (!n) return;
-      n.dataset.dragging = "true";
-      n.style.setProperty(
-        "--drag-x",
-        `${axis === "y" ? 0 : Math.max(-260, Math.min(260, a.dx))}px`,
-      );
-      n.style.setProperty(
-        "--drag-y",
-        `${axis === "x" ? 0 : Math.max(-300, Math.min(300, a.dy))}px`,
-      );
+    function paint(contact: Contact) {
+      const { axis, direction } = options.current;
+      const dx =
+          axis === "y"
+            ? 0
+            : contact.dx +
+              (options.current.onDrop ? window.scrollX - scrollX : 0),
+        dy =
+          axis === "x"
+            ? 0
+            : contact.dy +
+              (options.current.onDrop ? window.scrollY - scrollY : 0);
       const distance =
-        axis === "x" ? a.dx : axis === "y" ? a.dy : Math.hypot(a.dx, a.dy);
-      n.style.setProperty(
+        axis === "x" ? dx : axis === "y" ? dy : Math.hypot(dx, dy);
+      element!.dataset.dragging = "true";
+      element!.dataset.holding = "false";
+      element!.style.setProperty("--drag-x", `${dx}px`);
+      element!.style.setProperty("--drag-y", `${dy}px`);
+      element!.style.setProperty(
+        "--drag-rotation",
+        `${Math.max(-7, Math.min(7, dx * 0.045))}deg`,
+      );
+      element!.style.setProperty(
+        "--drag-flip",
+        `${Math.max(-60, Math.min(60, dx * 0.3))}deg`,
+      );
+      element!.style.setProperty(
+        "--pull-y",
+        `${Math.max(-145, Math.min(0, dy))}px`,
+      );
+      element!.style.setProperty(
         "--gesture-progress",
         String(
           Math.max(
             0,
             Math.min(
               1,
-              (direction ? distance * direction : Math.abs(distance)) /
-                threshold,
+              (direction ? distance * direction : Math.abs(distance)) / limit,
             ),
           ),
         ),
       );
-    });
-  }
-  function end(event: PointerEvent<HTMLDivElement>, cancelled = false) {
-    const a = active.current;
-    if (!a || a.id !== event.pointerId) return;
-    active.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId))
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    reset();
-    if (cancelled || a.consumed || !a.locked) return;
-    if (options.current.onDrop) {
-      options.current.onDrop(event.clientX, event.clientY);
-      return;
+      const overTarget =
+        options.current.onDrag?.({ x: contact.x, y: contact.y }) === true;
+      if (options.current.onDrop && !overTarget) {
+        const edge = 48,
+          speed =
+            contact.y < edge
+              ? -Math.min(7, (edge - contact.y) / 6)
+              : contact.y > innerHeight - edge
+                ? Math.min(7, (contact.y - innerHeight + edge) / 6)
+                : 0;
+        const before = window.scrollY;
+        if (speed) window.scrollBy(0, speed);
+        if (window.scrollY !== before) {
+          element!.style.setProperty(
+            "--drag-y",
+            `${contact.dy + window.scrollY - scrollY}px`,
+          );
+          frame = requestAnimationFrame(() => paint(contact));
+        }
+      }
     }
-    const distance =
-      axis === "x" ? a.dx : axis === "y" ? a.dy : Math.hypot(a.dx, a.dy);
-    if (
-      Math.abs(distance) >= threshold &&
-      (!direction || distance * direction > 0)
-    )
-      options.current.onCommit?.(Math.sign(distance));
-  }
+    const off = observeContact(element, () => ({
+      axis: options.current.axis,
+      disabled: options.current.disabled,
+      start() {
+        reset();
+        held = false;
+        scrollX = window.scrollX;
+        scrollY = window.scrollY;
+        started = performance.now();
+        const rect = element.getBoundingClientRect();
+        limit = gestureThreshold(
+          rect.width,
+          rect.height,
+          options.current.axis,
+          options.current.threshold,
+        );
+        options.current.onStart?.();
+        if (options.current.onHold) {
+          element.dataset.holding = "true";
+          const tick = () => {
+            const progress = Math.min(
+              1,
+              (performance.now() - started) / options.current.holdMs,
+            );
+            element.style.setProperty("--hold-progress", String(progress));
+            if (progress >= 1) {
+              held = true;
+              element.dataset.holding = "false";
+              reportGesture(element, "hold", "maintien accepté");
+              result("accepted");
+              options.current.onHold?.();
+            } else hold = requestAnimationFrame(tick);
+          };
+          hold = requestAnimationFrame(tick);
+        }
+      },
+      move(contact) {
+        cancelAnimationFrame(hold);
+        if (held) return;
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => paint(contact));
+      },
+      end(contact) {
+        cancelAnimationFrame(frame);
+        cancelAnimationFrame(hold);
+        const current = options.current;
+        if (!held && contact.intent === "accept") {
+          // Keep the visual excluded from hit-testing until the drop resolves.
+          paint(contact);
+          const distance =
+            current.axis === "x"
+              ? contact.dx
+              : current.axis === "y"
+                ? contact.dy
+                : Math.hypot(contact.dx, contact.dy);
+          const accepted = current.onDrop
+            ? current.onDrop(contact.x, contact.y) !== false
+            : Math.abs(distance) >= limit &&
+              (!current.direction || distance * current.direction > 0);
+          if (accepted && !current.onDrop)
+            current.onCommit?.(Math.sign(distance));
+          reportGesture(
+            element,
+            "fin",
+            accepted ? "geste accepté" : "rejeté : seuil / direction / case",
+            contact.dx,
+            contact.dy,
+          );
+          result(accepted ? "accepted" : "rejected");
+        } else
+          reportGesture(
+            element,
+            "fin",
+            held ? "maintien terminé" : "tap · commande accessible",
+            contact.dx,
+            contact.dy,
+          );
+        reset();
+        return held || contact.intent === "accept";
+      },
+      cancel() {
+        reset();
+        result("cancelled");
+      },
+    }));
+    return () => {
+      off();
+      reset();
+      clearTimeout(resultTimer);
+    };
+  }, []);
   return (
     <div
       ref={node}
       className={`gesture-surface ${className}`}
       data-axis={axis}
+      data-disabled={disabled || undefined}
+      data-gesture-input="surface"
       style={style}
-      onDragStart={(event) => event.preventDefault()}
-      onPointerDown={down}
-      onPointerMove={move}
-      onPointerUp={(event) => end(event)}
-      onPointerCancel={(event) => end(event, true)}
-      onLostPointerCapture={(event) => {
-        if (
-          event.target === event.currentTarget &&
-          active.current?.id === event.pointerId &&
-          !event.currentTarget.hasPointerCapture(event.pointerId)
-        ) {
-          active.current = null;
-          reset();
-        }
-      }}
       onContextMenu={(event) => {
         if (onHold) event.preventDefault();
-      }}
-      onClickCapture={(event) => {
-        if (suppress.current) {
-          event.preventDefault();
-          event.stopPropagation();
-          suppress.current = false;
-        }
       }}
     >
       {children}

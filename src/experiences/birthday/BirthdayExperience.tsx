@@ -1,3 +1,4 @@
+import { SwipeAdvance } from '../../components/gestures/SwipeAdvance';
 import { GestureSurface } from '../../components/gestures/GestureSurface';
 import { GestureHint } from '../../components/gestures/GestureHint';
 import { withBase } from '../../lib/paths';
@@ -164,7 +165,7 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
               <span className="bq-field-doodle" aria-hidden="true">pop !</span>
             </div>
             <p className="bq-balloon-feedback" role="status">{balloonFeedback}</p>
-            <div className="bq-scene-footer"><p className={`bq-counter ${balloonsDone ? 'is-complete' : ''}`} role="status" aria-live="polite"><span>{Math.min(popped.length, goal)} / {goal}</span> {balloonsDone ? 'C’est une pluie de bonheur !' : 'ballons éclatés'}</p><button className="bq-button" disabled={!balloonsDone} onClick={next}>Chercher les étoiles <span aria-hidden="true">→</span></button></div>
+            <div className="bq-scene-footer"><p className={`bq-counter ${balloonsDone ? 'is-complete' : ''}`} role="status" aria-live="polite"><span>{Math.min(popped.length, goal)} / {goal}</span> {balloonsDone ? 'C’est une pluie de bonheur !' : 'ballons éclatés'}</p><SwipeAdvance ready={balloonsDone} onNext={next}><button className="bq-button" disabled={!balloonsDone} onClick={next}>Chercher les étoiles <span aria-hidden="true">→</span></button></SwipeAdvance></div>
           </section>}
 
           {scene === 2 && <section className="bq-scene bq-centered bq-stars-scene" aria-labelledby="bq-title">
@@ -207,7 +208,7 @@ export default function BirthdayExperience({ config }: { config: BirthdayConfig 
             <p className="bq-eyebrow">05 / Le bonheur te va si bien</p>
             <h1 id="bq-title" {...titleProps}>Joyeux<br /><span>anniversaire,</span><br />{config.firstName}<span className="bq-title-dot"> !</span></h1>
             <div className="bq-final-message"><Sparkle /><p>{config.message}</p></div>
-            <div className="bq-adventure-gallery"><h2>Ton petit carnet de magie.</h2><div ref={gallery} className="memory-gallery" aria-label="Les souvenirs de cette aventure">
+            <div className="bq-adventure-gallery"><h2>Ton petit carnet de magie.</h2><div ref={gallery} className="memory-gallery" role="region" tabIndex={0} aria-label="Les souvenirs de cette aventure">
               {config.photos.length ? config.photos.map((photo, index) => <figure key={photo.src} style={{ animationDelay: `${index * .08}s` }}><img src={withBase(photo.src)} alt={photo.alt} width="320" height="240" loading="lazy"/>{photo.caption && <figcaption>{photo.caption}</figcaption>}</figure>) : wishes.map((wish, index) => <figure key={wish} style={{ animationDelay: `${index * .08}s` }}><div className="bq-journal-art" aria-hidden="true"><Sparkle color={['#c97882','#c5a0c8','#b7b67b'][index]}/></div><figcaption>{wish}</figcaption></figure>)}
             </div><div className="proposal-memory-controls"><button aria-label="Souvenir précédent" onClick={()=>gallery.current?.scrollBy({left:-210,behavior:reduced?'instant':'smooth'})}>←</button><button aria-label="Souvenir suivant" onClick={()=>gallery.current?.scrollBy({left:210,behavior:reduced?'instant':'smooth'})}>→</button></div><GestureHint label="Feuillette tes souvenirs"/></div>
             <button className="bq-button" onClick={replay}>Revivre la surprise <span aria-hidden="true">↺</span></button>

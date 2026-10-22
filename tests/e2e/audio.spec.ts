@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { appPath } from "./paths";
 
+test.beforeEach(async({page,browserName})=>{
+  // WinCairo WebKit 27.2 does not expose Web Audio. Do not mock that into a pass.
+  await page.goto(appPath('/'));
+  const supported=await page.evaluate(()=>typeof window.AudioContext==='function');
+  test.skip(browserName==='webkit'&&!supported,'WebKit Windows sans AudioContext : audio réel vérifié sous Chromium, parcours sans son couvert séparément.');
+});
+
 type Probe = {
   contexts: number;
   loops: { duration: number; rms: number }[];

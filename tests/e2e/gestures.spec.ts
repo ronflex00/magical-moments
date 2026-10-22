@@ -1,57 +1,7 @@
 import { expect, test, type Page, type Locator } from "@playwright/test";
 import { appPath } from "./paths";
+import { stroke } from "./input";
 
-async function stroke(
-  page: Page,
-  points: { x: number; y: number }[],
-  mobile: boolean,
-  hold = 0,
-  cancel = false,
-) {
-  if (mobile) {
-    const session = await page.context().newCDPSession(page);
-    try {
-      const contact = (point: { x: number; y: number }) => ({
-        ...point,
-        id: 1,
-        radiusX: 2,
-        radiusY: 2,
-        force: 0.6,
-      });
-      await session.send("Input.dispatchTouchEvent", {
-        type: "touchStart",
-        touchPoints: [contact(points[0])],
-      });
-      if (hold) await page.waitForTimeout(hold);
-      for (const point of points.slice(1))
-        await session.send("Input.dispatchTouchEvent", {
-          type: "touchMove",
-          touchPoints: [contact(point)],
-        });
-      await session.send("Input.dispatchTouchEvent", {
-        type: cancel ? "touchCancel" : "touchEnd",
-        touchPoints: [],
-      });
-    } finally {
-      await session.detach();
-    }
-  } else {
-    await page.mouse.move(points[0].x, points[0].y);
-    await page.mouse.down();
-    if (hold) await page.waitForTimeout(hold);
-    for (const point of points.slice(1))
-      await page.mouse.move(point.x, point.y, { steps: 2 });
-    if (cancel)
-      await page.evaluate(() =>
-        document
-          .querySelector('[data-dragging="true"]')
-          ?.dispatchEvent(
-            new PointerEvent("pointercancel", { pointerId: 1, bubbles: true }),
-          ),
-      );
-    await page.mouse.up();
-  }
-}
 async function drag(
   page: Page,
   source: Locator,
@@ -167,7 +117,8 @@ test("Anniversaire : pousser, soulever, gratter, maintenir, souffler et tirer le
   await expect(page.getByText("Ton vœu est bien gardé. ✧")).toBeVisible();
   await page.getByRole("button", { name: "Et maintenant, ton cadeau" }).click();
   const gift = page.locator(".bq-gift-stage .gesture-surface");
-  await drag(page, gift, isMobile, 0, -30, true);
+  await drag(page, gift, isMobile, 0, -100, true);
+  await expect(page.locator(".bq-gift-stage")).not.toHaveClass(/bq-gift-ribbon-loose/);
   await expect(page.locator(".bq-gift-message")).toHaveCount(0);
   await drag(page, gift, isMobile, 0, -92);
   await expect(page.locator(".bq-gift-stage")).toHaveClass(

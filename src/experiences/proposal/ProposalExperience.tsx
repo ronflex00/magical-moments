@@ -1,3 +1,4 @@
+import { SwipeAdvance } from '../../components/gestures/SwipeAdvance';
 import { GestureSurface } from '../../components/gestures/GestureSurface';
 import { GestureHint } from '../../components/gestures/GestureHint';
 import { withBase } from '../../lib/paths';
@@ -108,7 +109,7 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
                   <h2>{selected.title}</h2><p>{selected.message}</p>
                 </motion.div> : <div className="proposal-memory-empty"><Star/><p>Nos petits infinis.</p><span>Une étoile, un souvenir.</span></div>}
               </AnimatePresence>
-            </div><div className="proposal-memory-controls"><button aria-label="Souvenir précédent" onClick={()=>flipMemory(1)}>←</button><button aria-label="Souvenir suivant" onClick={()=>flipMemory(-1)}>→</button></div><GestureHint done={state.memories.length===3} label="Feuillette nos souvenirs"/></GestureSurface>
+            </div><div className="proposal-memory-controls" data-gesture-ignore><button aria-label="Souvenir précédent" onClick={()=>flipMemory(1)}>←</button><button aria-label="Souvenir suivant" onClick={()=>flipMemory(-1)}>→</button></div><GestureHint done={state.memories.length===3} label="Feuillette nos souvenirs"/></GestureSurface>
           </div>
           <button type="button" className="proposal-button" onClick={next} disabled={state.memories.length < 3}>{state.memories.length < 3 ? 'Retrouve nos trois souvenirs' : 'La suite de notre histoire'} <Arrow/></button>
         </section>}
@@ -117,13 +118,13 @@ export default function ProposalExperience({ config }: { config: ProposalConfig 
           <SceneTitle eyebrow="Chapitre II · Ce qui nous relie">D’un petit instant,<br/><em>à l’infini.</em></SceneTitle>
           <p className="proposal-description">Relie nos étoiles. ✦</p>
           <ConstellationWeave connected={state.constellation} connect={index => { dispatch({ type: 'connect', index }); play(index===4?'romantic_finale':'constellation_connect',index); tactileFeedback(); }}/>
-          <button type="button" className="proposal-button" disabled={state.constellation.length < 5} onClick={next}>Découvrir la lettre <Arrow/></button>
+          <SwipeAdvance ready={state.constellation.length===5} onNext={next}><button type="button" className="proposal-button" disabled={state.constellation.length < 5} onClick={next}>Découvrir la lettre <Arrow/></button></SwipeAdvance>
         </section>}
 
         {state.step === 3 && <section className="proposal-scene proposal-letter-scene" aria-label="La lettre secrète">
           <SceneTitle eyebrow="Chapitre III · Les mots du cœur">Il fallait que<br/><em>je te le dise.</em></SceneTitle>
           {!state.letterOpen ? <>
-            <GestureSurface className="proposal-letter-gesture" axis="y" direction={-1} onCommit={openLetter}><button type="button" className={`proposal-envelope-button ${state.sealBroken ? 'is-unsealed' : ''}`} onClick={openLetter} aria-label={state.sealBroken ? 'Déplier la lettre' : 'Briser le sceau. Ouvrir la lettre de votre histoire'}>
+            <GestureSurface className="proposal-letter-gesture" axis="y" direction={-1} onCommit={openLetter}><button type="button" className={`proposal-envelope-button gesture-object ${state.sealBroken ? 'is-unsealed' : ''}`} onClick={openLetter} aria-label={state.sealBroken ? 'Déplier la lettre' : 'Briser le sceau. Ouvrir la lettre de votre histoire'}>
               <svg viewBox="0 0 420 290" fill="none" aria-hidden="true"><path d="m48 83 162-53 162 53v159H48V83Z" fill="#dac7a9"/><path d="M61 88h298v145H61z" fill="#fbf0da"/><path d="m48 83 162 109L372 83v159H48V83Z" fill="#e8d7ba"/><path d="m48 242 139-104c14-11 32-11 46 0l139 104H48Z" fill="#f2e4cc"/><path d="m48 83 162 109L372 83" stroke="#b7996b" strokeOpacity=".5"/><g className="proposal-wax"><circle cx="210" cy="170" r="25" fill="#aa756c"/><circle cx="210" cy="170" r="20" stroke="#d6a59a"/><path d="m210 156 3 11 11 3-11 3-3 11-3-11-11-3 11-3 3-11Z" fill="#efc6b7"/></g></svg>
               <span>{state.sealBroken ? 'Déplier la lettre' : 'Briser le sceau'} <Arrow/></span>
             </button><GestureHint kind="pull" label={state.sealBroken?"Fais glisser la lettre":"Soulève le sceau"}/></GestureSurface>

@@ -1,6 +1,8 @@
+import { SwipeAdvance } from '../../components/gestures/SwipeAdvance';
 import { GestureSurface } from '../../components/gestures/GestureSurface';
 import { GestureHint } from '../../components/gestures/GestureHint';
 import { useMemo, useState, type CSSProperties } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import type { PartyConfig } from '../../data/types';
 import { ExperienceShell, SceneTransition, ConfettiEffect } from '../../components/shared/ExperienceShell';
 import { useSound } from '../../lib/audio/useSound';
@@ -112,6 +114,7 @@ function InvitationDetails({ config }: { config: PartyConfig }) {
 }
 
 export default function PartyExperience({ config }: { config: PartyConfig }) {
+  const reduced=useReducedMotion();
   const [scene, setScene] = useState(0);
   const [ticketBack,setTicketBack]=useState(false);
   const [found, setFound] = useState<ClueId[]>([]);
@@ -209,7 +212,7 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
           <h1 id="party-workbench-title">Les bonnes pièces.<br/><em>Le bon ordre.</em></h1>
           <p className="party-puzzle-description">Recomposez le ticket. ✦</p>
           <ClueWorkbench onSound={sound.play} config={config} slots={slots} code={code} onPlace={nextSlots => { setSlots(nextSlots); tactileFeedback(); }}/>
-          <button type="button" className="party-button party-puzzle-next" disabled={!cluesAssembled(slots)} onClick={advance}>Essayer le code secret <Arrow/></button>
+          <SwipeAdvance ready={cluesAssembled(slots)} onNext={advance}><button type="button" className="party-button party-puzzle-next" disabled={!cluesAssembled(slots)} onClick={advance}>Essayer le code secret <Arrow/></button></SwipeAdvance>
         </section>}
 
         {scene === 3 && <section className="party-scene party-puzzle-scene" aria-labelledby="party-lock-title">
@@ -222,7 +225,7 @@ export default function PartyExperience({ config }: { config: PartyConfig }) {
 
         {scene === 4 && <section className="party-reveal party-scene" aria-labelledby="party-reveal-title">
           <div className="party-reveal-aside"><span className="party-eyebrow">MISSION ACCOMPLIE</span><h1 id="party-reveal-title">Vous avez<br />le sens<br /><em>de la fête.</em></h1><p>La piste est à vous.</p><Star className="party-reveal-star" /></div>
-<GestureSurface className={`party-ticket-gesture ${ticketBack?'is-back':''}`} axis="x" onCommit={()=>{setTicketBack(v=>!v);sound.play('paper_slide');}}>{ticketBack?<div className="party-invitation-back"><DiscoBall/><span>VOTRE SOIRÉE SECRÈTE</span><strong>{config.name}</strong><span>{dateLabel} · {config.time}</span></div>:<article className="party-invitation gesture-object"><div className="party-invitation-top"><span>UNE INVITATION DE {config.organizer}</span><DiscoBall /></div><span className="party-invitation-overline">GARDEZ VOTRE SOIRÉE POUR</span><h2 id="party-invitation-title">{config.name}</h2><InvitationDetails config={config} /><div className="party-invitation-foot"><span>VOUS + NOUS = LE BON PROGRAMME</span><Star /></div></article>}<button className="party-flip-control" onClick={()=>{setTicketBack(v=>!v);sound.play('paper_slide');}}>{ticketBack?'Voir les informations':'Retourner l’invitation'} ↔</button><GestureHint label="Faites glisser votre invitation"/></GestureSurface>
+<GestureSurface className={`party-ticket-gesture ${ticketBack?'is-back':''}`} axis="x" onCommit={()=>{setTicketBack(v=>!v);sound.play('paper_slide');}}><motion.div key={String(ticketBack)} className="party-ticket-face gesture-object" initial={{rotateY:reduced?0:-85,opacity:reduced?1:.5}} animate={{rotateY:0,opacity:1}} transition={{duration:reduced?0:.4}}>{ticketBack?<div className="party-invitation-back"><DiscoBall/><span>VOTRE SOIRÉE SECRÈTE</span><strong>{config.name}</strong><span>{dateLabel} · {config.time}</span></div>:<article className="party-invitation"><div className="party-invitation-top"><span>UNE INVITATION DE {config.organizer}</span><DiscoBall /></div><span className="party-invitation-overline">GARDEZ VOTRE SOIRÉE POUR</span><h2 id="party-invitation-title">{config.name}</h2><InvitationDetails config={config} /><div className="party-invitation-foot"><span>VOUS + NOUS = LE BON PROGRAMME</span><Star /></div></article>}</motion.div><button data-gesture-ignore className="party-flip-control" onClick={()=>{setTicketBack(v=>!v);sound.play('paper_slide');}}>{ticketBack?'Voir les informations':'Retourner l’invitation'} ↔</button><GestureHint label="Faites glisser votre invitation"/></GestureSurface>
           <div className="party-reveal-action"><button className="party-button" type="button" onClick={advance}>Passer en mode fête <Arrow /></button></div>
         </section>}
 

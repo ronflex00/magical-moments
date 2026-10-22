@@ -42,7 +42,7 @@ Le build vérifie TypeScript puis génère `dist/`. Le serveur de prévisualisat
 Les tests unitaires Vitest couvrent les configurations, les conditions de progression et les règles des mini-jeux. Pour les tests navigateur :
 
 ```sh
-npx playwright install chromium
+npx playwright install chromium webkit
 npm run build
 npm run test:e2e
 ```
@@ -176,3 +176,11 @@ Les six chapitres de chaque aventure et les configurations existantes sont conse
 Le moteur `src/lib/audio/AudioEngine.ts` conserve une boucle musicale par expérience, sépare musique/effets/master, effectue les fondus et le ducking, suspend un onglet masqué, signale les refus et nettoie ses ressources. Les scènes utilisent les sons contextuels de `sounds.ts`. Les particules, nuages, étoiles, objets et lumières gardent des durées distinctes. Les transitions ont une personnalité papier, céleste ou arcade. Le bouton de pause et les animations réduites restent disponibles.
 
 La V3 n’est pas poussée automatiquement pendant sa préparation : son brief demande un accord explicite avant le push sur `main`, lequel déclenchera le workflow de publication. Les mesures et vérifications de cette version sont dans [VALIDATION-V3.md](./VALIDATION-V3.md).
+
+## 11. Correction tactile et diagnostic
+
+Les gestes partagent un contrôleur natif Pointer/Touch Events, avec un seul propriétaire par contact, capture dès le départ, annulations et protection contre les clics de compatibilité. Les cartes horizontales conservent le scroll vertical ; dessin, grattage et déplacements utilisent leurs surfaces dédiées. Les objets suivent le contact avant validation, avec retour en cas d’échec.
+
+Ajouter `?debugGestures=1` à une démonstration affiche un panneau local repliable : événements, déplacement, direction, acceptation, capture et `touch-action`. Il ne sauvegarde ni n’envoie de données. Les tests comprennent Chromium et WebKit ; les limites du port Windows et la procédure pour iPhone physique sont détaillées dans [GESTURE-FIX.md](./GESTURE-FIX.md).
+
+Cette correction est préparée pour un essai local ; elle ne doit pas être poussée sur `main` avant une nouvelle autorisation explicite.

@@ -1,65 +1,93 @@
-import { useEffect, useRef, type PointerEvent } from "react";
-/** Small optional scratch surface; the enclosing button remains the keyboard alternative. */
+import { useEffect, useRef } from "react";
+import { observeContact, type Contact } from "./contact";
+import { reportGesture } from "./GestureDebug";
+
+/** The canvas owns this contact; the enclosing button remains a keyboard option. */
 export function ScratchVeil({ onReveal }: { onReveal: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null),
-    drawing = useRef<number | null>(null),
-    cells = useRef(new Set<string>()),
-    moved = useRef(false);
+    latest = useRef(onReveal);
+  latest.current = onReveal;
   useEffect(() => {
-    const ctx = ref.current?.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = "#d8c8e5";
-      ctx.fillRect(0, 0, 120, 100);
-      ctx.fillStyle = "#745d86";
-      ctx.font = "30px Georgia";
-      ctx.textAlign = "center";
-      ctx.fillText("✧", 60, 60);
-    }
+    const canvas = ref.current,
+      ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    ctx.fillStyle = "#d8c8e5";
+    ctx.fillRect(0, 0, 120, 100);
+    ctx.fillStyle = "#745d86";
+    ctx.font = "30px Georgia";
+    ctx.textAlign = "center";
+    ctx.fillText("✧", 60, 60);
+    const cells = new Set<string>();
+    let previous: { x: number; y: number } | null = null,
+      ready = false,
+      revealed = false;
+    const point = (contact: Contact) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: Math.max(
+          0,
+          Math.min(119, ((contact.x - rect.left) / rect.width) * 120),
+        ),
+        y: Math.max(
+          0,
+          Math.min(99, ((contact.y - rect.top) / rect.height) * 100),
+        ),
+      };
+    };
+    return observeContact(canvas, () => ({
+      axis: "both",
+      slop: 2,
+      start(contact) {
+        previous = point(contact);
+      },
+      move(contact) {
+        const current = point(contact),
+          from = previous || current;
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.lineWidth = 34;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(current.x, current.y);
+        ctx.stroke();
+        const steps = Math.max(
+          1,
+          Math.ceil(Math.hypot(current.x - from.x, current.y - from.y) / 6),
+        );
+        for (let i = 0; i <= steps; i++)
+          cells.add(
+            `${Math.floor((from.x + ((current.x - from.x) * i) / steps) / 12)},${Math.floor((from.y + ((current.y - from.y) * i) / steps) / 12)}`,
+          );
+        previous = current;
+        ready = cells.size >= 13;
+        reportGesture(
+          canvas,
+          "grattage",
+          ready ? "zone révélée · relâcher" : "grattage accepté",
+          contact.dx,
+          contact.dy,
+        );
+      },
+      end(contact) {
+        previous = null;
+        if (ready && !revealed && contact.intent === "accept") {
+          revealed = true;
+          latest.current();
+        }
+      },
+      cancel() {
+        previous = null;
+      },
+    }));
   }, []);
-  function scratch(event: PointerEvent<HTMLCanvasElement>) {
-    if (drawing.current !== event.pointerId) return;
-    const canvas = event.currentTarget,
-      rect = canvas.getBoundingClientRect(),
-      x = ((event.clientX - rect.left) / rect.width) * 120,
-      y = ((event.clientY - rect.top) / rect.height) * 100;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.arc(x, y, 17, 0, Math.PI * 2);
-    ctx.fill();
-    cells.current.add(`${Math.floor(x / 12)},${Math.floor(y / 12)}`);
-    moved.current = true;
-    if (cells.current.size >= 13) {
-      drawing.current = null;
-      onReveal();
-    }
-  }
   return (
     <canvas
       ref={ref}
       width="120"
       height="100"
       className="scratch-veil"
+      data-gesture-input="scratch"
       aria-hidden="true"
-      onPointerDown={(event) => {
-        drawing.current = event.pointerId;
-        moved.current = false;
-        event.currentTarget.setPointerCapture(event.pointerId);
-        event.stopPropagation();
-      }}
-      onPointerMove={scratch}
-      onPointerUp={(event) => {
-        drawing.current = null;
-        if (event.currentTarget.hasPointerCapture(event.pointerId))
-          event.currentTarget.releasePointerCapture(event.pointerId);
-      }}
-      onPointerCancel={() => {
-        drawing.current = null;
-      }}
-      onClick={(event) => {
-        if (moved.current) event.stopPropagation();
-      }}
     />
   );
 }

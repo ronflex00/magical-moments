@@ -3,6 +3,55 @@
   isolation: isolate;
   overflow-x: clip;
 }
+.gesture-debug {
+  position: fixed;
+  z-index: 1000;
+  left: max(8px, env(safe-area-inset-left));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 16px));
+  border: 1px solid #c9d9c9;
+  border-radius: 8px;
+  background: #102018f5;
+  color: #f4fff4;
+  font:
+    11px/1.5 ui-monospace,
+    monospace;
+  text-align: left;
+  box-shadow: 0 3px 15px #0004;
+}
+.gesture-debug summary {
+  padding: 10px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.gesture-debug.is-top {
+  top: max(8px, env(safe-area-inset-top));
+  bottom: auto;
+}
+.gesture-debug summary button {
+  float: right;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  min-width: 32px;
+  min-height: 30px;
+  font: inherit;
+}
+.gesture-debug-body {
+  max-height: 28svh;
+  overflow: auto;
+  padding: 0 10px 10px;
+}
+.gesture-debug p {
+  margin: 4px 0;
+  font: inherit;
+  overflow-wrap: anywhere;
+}
+.gesture-debug ol {
+  margin: 8px 0;
+  padding-left: 18px;
+}
 .experience-topbar {
   position: relative;
   z-index: 30;
@@ -752,6 +801,117 @@ html[data-motion-quality="gentle"] .ambient-world svg:nth-child(n + 5) {
 .gesture-surface {
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.gesture-surface img {
+  -webkit-user-drag: none;
+}
+.gesture-surface[data-disabled="true"] {
+  touch-action: auto;
+}
+/* Selection, hover and ambient transforms must not replace finger translation. */
+.gesture-surface > .gesture-object {
+  transition:
+    translate 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    rotate 0.28s;
+}
+.party-clue-drag > .party-clue-piece.is-selected {
+  translate: 0 -7px;
+}
+.gesture-surface[data-dragging="true"] {
+  z-index: 20;
+}
+.gesture-surface[data-dragging="true"] > .gesture-object {
+  translate: var(--drag-x) var(--drag-y) !important;
+  rotate: var(--drag-rotation) !important;
+  transition: none !important;
+  pointer-events: none;
+  will-change: translate, rotate;
+}
+.gesture-surface[data-gesture-result="accepted"] > .gesture-object:disabled {
+  opacity: 0.6;
+}
+.bq-gift-stage .gesture-surface[data-dragging="true"] .bq-gift-bow {
+  translate: 0 var(--pull-y);
+  transition: none;
+}
+.bq-gift-ribbon-loose .gesture-surface .bq-gift-lid {
+  translate: 0 var(--pull-y);
+  transition: translate 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.bq-gift-ribbon-loose .gesture-surface[data-dragging="true"] .bq-gift-lid {
+  transition: none;
+}
+.proposal-letter-gesture[data-dragging="true"] svg {
+  translate: none;
+  rotate: none;
+}
+.proposal-ring-gesture[data-dragging="true"] .proposal-box-lid {
+  transition: none !important;
+}
+.proposal-weave-board[data-gesture-input="draw"] {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.bq-cake-gesture::before {
+  content: "";
+  position: absolute;
+  left: 35%;
+  right: 35%;
+  bottom: 9%;
+  height: 3px;
+  border-radius: 5px;
+  background: #bf7585;
+  transform: scaleX(var(--hold-progress));
+  transform-origin: left;
+  opacity: 0;
+  pointer-events: none;
+}
+.bq-cake-gesture[data-holding="true"]::before {
+  opacity: 1;
+}
+.bq-cake-gesture[data-dragging="true"] .bq-cake-stage {
+  transform: translateX(calc(var(--drag-x) * 0.14));
+}
+.party-ticket-face {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+.party-ticket-gesture[data-dragging="true"] > .party-ticket-face {
+  rotate: y var(--drag-flip) !important;
+}
+.chapter-advance {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+.chapter-swipe-label {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.chapter-advance .gesture-object {
+  width: 100%;
+}
+.bq-adventure-gallery {
+  width: 100%;
+  max-width: 720px;
+  min-width: 0;
+}
+.bq-adventure-gallery .memory-gallery { min-width: 0; max-width: 100%; }
+@media (max-width: 900px) {
+  .bq-scene.bq-final { width: 100%; min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gesture-surface > .gesture-object,
+  .bq-gift-ribbon-loose .gesture-surface .bq-gift-lid {
+    transition: none;
+  }
 }
 
 /* Lecture mobile : les commandes et informations ne dépendent pas de microtypographie. */
