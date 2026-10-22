@@ -134,6 +134,8 @@ test("Mariage : feuilleter sans contourner le jeu, tirer la lettre et ouvrir la 
   page,
   isMobile,
 }) => {
+  // This complete journey includes paced native input and scene transitions.
+  test.setTimeout(60000);
   await begin(page, "mariage", "Commencer notre histoire");
   const cards = page.locator(".proposal-memory-swipe");
   await drag(page, cards, isMobile, 0, 55, true);

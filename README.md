@@ -184,3 +184,5 @@ Les gestes partagent un contrôleur natif Pointer/Touch Events, avec un seul pro
 Ajouter `?debugGestures=1` à une démonstration affiche un panneau local repliable : événements, déplacement, direction, acceptation, capture et `touch-action`. Il ne sauvegarde ni n’envoie de données. Les tests comprennent Chromium et WebKit ; les limites du port Windows et la procédure pour iPhone physique sont détaillées dans [GESTURE-FIX.md](./GESTURE-FIX.md).
 
 Cette correction est préparée pour un essai local ; elle ne doit pas être poussée sur `main` avant une nouvelle autorisation explicite.
+
+La correction ciblée de Secret Party accepte aussi les pièces prises par un bord et garde une surface stable lors du retournement de l’invitation. Le diagnostic indique la case visée et le résultat du dépôt. Reproductions, tests et procédure iPhone : [PARTY-FIX.md](./PARTY-FIX.md). Aucun push pour cette correction.

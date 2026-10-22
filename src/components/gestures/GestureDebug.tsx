@@ -12,6 +12,8 @@ type Entry = {
   decision: string;
   capture: string;
   action: string;
+  dropTarget: string;
+  result: 'accepted' | 'rejected' | 'tracking';
 };
 
 export function debugGesturesEnabled() {
@@ -28,12 +30,13 @@ export function reportGesture(
   decision: string,
   dx = 0,
   dy = 0,
+  diagnostic?: { object?: string; dropTarget?: string },
 ) {
   if (!debugGesturesEnabled()) return;
   element.dispatchEvent(
     new CustomEvent(channel, {
       bubbles: true,
-      detail: { event, decision, dx, dy },
+      detail: { event, decision, dx, dy, ...diagnostic },
     }),
   );
 }
@@ -48,6 +51,7 @@ export function GestureDebug() {
     let start = { x: 0, y: 0 };
     let current: Element | null = null;
     let decision = "en attente";
+    let dropTarget = '—';
     let recent: Entry[] = [];
     let timer = 0;
     const update = () => {
@@ -70,8 +74,10 @@ export function GestureDebug() {
         if (point) start = { x: point.clientX, y: point.clientY };
         current = origin;
         decision = "en attente";
+        dropTarget = '—';
       }
       if (detail) decision = detail.decision;
+      if (detail?.dropTarget) dropTarget = detail.dropTarget;
       const dx = detail?.dx ?? (point ? point.clientX - start.x : 0);
       const dy = detail?.dy ?? (point ? point.clientY - start.y : 0);
       const target = current || origin || surface;
@@ -80,9 +86,12 @@ export function GestureDebug() {
         ...recent.slice(-13),
         {
           event: detail?.event || event.type,
-          target:
-            target.getAttribute("aria-label") ||
+          target: detail?.object ||
+            control.getAttribute("aria-label") ||
             `${target.tagName.toLowerCase()}.${String(target.getAttribute("class") || "").split(" ")[0]}`,
+          dropTarget,
+          result: /rejeté|cancel|interruption|perte de capture/.test(`${event.type} ${decision}`)
+            ? 'rejected' : /accepté/.test(decision) ? 'accepted' : 'tracking',
           dx: Math.round(dx),
           dy: Math.round(dy),
           direction:
@@ -156,13 +165,15 @@ export function GestureDebug() {
             Capture : {last.capture}
             <br />
             touch-action : {last.action}
+            <br />
+            Dépôt : {last.dropTarget}
           </p>
         )}
         <ol aria-label="Derniers événements tactiles">
           {entries.map((entry, index) => (
-            <li key={index}>
+            <li key={index} data-result={entry.result}>
               {entry.event} · {entry.dx}/{entry.dy} · {entry.direction} ·{" "}
-              {entry.decision} · capture {entry.capture}
+              {entry.decision} · capture {entry.capture} · dépôt {entry.dropTarget}
             </li>
           ))}
         </ol>

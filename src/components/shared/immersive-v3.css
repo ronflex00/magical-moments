@@ -678,7 +678,7 @@ html[data-motion-quality="gentle"] .ambient-world svg:nth-child(n + 5) {
 .bq-gift-stage .gesture-hint {
   margin-top: -20px;
 }
-.party-ticket-gesture > .party-invitation-back > svg {
+.party-ticket-face > .party-invitation-back > svg {
   width: 90px;
   margin: 0 auto 20px;
 }
@@ -876,8 +876,25 @@ html[data-motion-quality="gentle"] .ambient-world svg:nth-child(n + 5) {
   transform: translateX(calc(var(--drag-x) * 0.14));
 }
 .party-ticket-face {
+  display: grid;
   perspective: 1000px;
   transform-style: preserve-3d;
+}
+.party-ticket-face > :is(.party-invitation, .party-invitation-back) {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.party-ticket-face > [aria-hidden="true"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+.gesture-debug li[data-result="rejected"] {
+  color: #ffc0b8;
+  border-left: 3px solid #ff8e80;
+  padding-left: 4px;
+}
+.gesture-debug li[data-result="accepted"] {
+  color: #b7f6bc;
 }
 .party-ticket-gesture[data-dragging="true"] > .party-ticket-face {
   rotate: y var(--drag-flip) !important;
